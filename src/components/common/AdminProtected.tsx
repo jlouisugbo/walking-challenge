@@ -5,7 +5,7 @@ interface AdminProtectedProps {
   children: React.ReactNode;
 }
 
-const ADMIN_PASSWORD = 'E$horeme11';
+const ADMIN_PASSWORD = 'walkingchallengeadmin';
 const STORAGE_KEY = 'stepChallenge_adminAuth';
 const AUTH_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
