@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
-const SUPABASE_URL = 'https://wvabpvjrsxmthdkclskl.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2YWJwdmpyc3htdGhka2Nsc2tsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1NTgzNzgsImV4cCI6MjA0NzEzNDM3OH0.Y8ya5T4DMHZDaSfb6MMNfQ_0URVb33B';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2YWJwdmpyc3htdGhka2Nsc2tsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMTU1ODM3OCwiZXhwIjoyMDQ3MTM0Mzc4fQ.2MmQFfIyDjubhnhGRDCHvA_G-v9E6Gn';
+const SUPABASE_URL = 'https://bjaqorctnozmvmahhncs.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Y8ya5T4DMHZDaSfb6MMNfQ_0URVb33B';
+const SUPABASE_SERVICE_KEY = 'sb_secret_2MmQFfIyDjubhnhGRDCHvA_G-v9E6Gn';
 
 // Public client for reads (anon key)
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

@@ -12,9 +12,19 @@
 }
 
 @layer components {
-  /* Glassmorphism Card */
+  /* Glassmorphism Card - Compact for mobile */
   .glass-card {
-    @apply bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 shadow-xl;
+    @apply bg-white/10 backdrop-blur-lg rounded-lg md:rounded-xl border border-white/20 shadow-xl;
+  }
+
+  /* Compact card styling */
+  .card {
+    @apply glass-card p-3 md:p-4;
+  }
+
+  /* Extra compact for lists */
+  .card-compact {
+    @apply glass-card p-2 md:p-3;
   }
 
   /* Gradient Backgrounds */
