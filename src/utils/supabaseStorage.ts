@@ -1,0 +1,401 @@
+import { supabase, supabaseAdmin, type DbParticipant, type DbDailyHistory, type DbWildcardResult, type DbWeeklyMilestone } from '../lib/supabase';
+import type { Participant, DailySteps, ChallengeConfig, WildcardResult } from '../types';
+import { DEFAULT_CONFIG } from '../types';
+
+// ============================================
+// PARTICIPANT OPERATIONS
+// ============================================
+
+export const loadParticipants = async (): Promise<Participant[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('participants')
+      .select('*')
+      .order('total_steps', { ascending: false });
+
+    if (error) throw error;
+
+    // Convert DB format to app format
+    const participants = await Promise.all(
+      (data || []).map(async (dbP: DbParticipant) => {
+        // Load daily history for this participant
+        const { data: history } = await supabase
+          .from('daily_history')
+          .select('*')
+          .eq('participant_id', dbP.id)
+          .order('date', { ascending: false });
+
+        const dailyHistory: DailySteps[] = (history || []).map((h: DbDailyHistory) => ({
+          date: h.date,
+          steps: h.steps,
+          timestamp: new Date(h.created_at).getTime(),
+        }));
+
+        return {
+          id: dbP.id,
+          name: dbP.name,
+          totalSteps: dbP.total_steps,
+          points: dbP.points,
+          team: dbP.team,
+          notes: dbP.notes,
+          createdAt: new Date(dbP.created_at).getTime(),
+          lastUpdated: new Date(dbP.updated_at).getTime(),
+          dailyHistory: dailyHistory.length > 0 ? dailyHistory : undefined,
+        };
+      })
+    );
+
+    return participants;
+  } catch (error) {
+    console.error('Error loading participants:', error);
+    return [];
+  }
+};
+
+export const saveParticipants = async (participants: Participant[]): Promise<void> => {
+  // This function is kept for compatibility but does nothing
+  // Individual updates are handled by specific functions
+  console.log('saveParticipants called - using individual update functions instead');
+};
+
+export const addParticipant = async (name: string, steps: number = 0, team: string | null = null): Promise<Participant | null> => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('participants')
+      .insert({
+        name: name.trim(),
+        total_steps: steps,
+        points: 0,
+        team,
+        notes: '',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      name: data.name,
+      totalSteps: data.total_steps,
+      points: data.points,
+      team: data.team,
+      notes: data.notes,
+      createdAt: new Date(data.created_at).getTime(),
+      lastUpdated: new Date(data.updated_at).getTime(),
+    };
+  } catch (error) {
+    console.error('Error adding participant:', error);
+    return null;
+  }
+};
+
+export const updateParticipant = async (id: string, updates: Partial<Participant>): Promise<void> => {
+  try {
+    const dbUpdates: any = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.totalSteps !== undefined) dbUpdates.total_steps = updates.totalSteps;
+    if (updates.points !== undefined) dbUpdates.points = updates.points;
+    if (updates.team !== undefined) dbUpdates.team = updates.team;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+
+    const { error } = await supabaseAdmin
+      .from('participants')
+      .update(dbUpdates)
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error updating participant:', error);
+  }
+};
+
+export const deleteParticipant = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabaseAdmin
+      .from('participants')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting participant:', error);
+  }
+};
+
+export const awardWildcardPoint = async (participantId: string): Promise<void> => {
+  try {
+    // Get current points
+    const { data: participant } = await supabase
+      .from('participants')
+      .select('points')
+      .eq('id', participantId)
+      .single();
+
+    if (!participant) return;
+
+    // Increment points
+    const { error } = await supabaseAdmin
+      .from('participants')
+      .update({ points: participant.points + 1 })
+      .eq('id', participantId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error awarding wildcard point:', error);
+  }
+};
+
+// ============================================
+// DAILY HISTORY OPERATIONS
+// ============================================
+
+export const saveDailyHistory = async (participantId: string, date: string, steps: number): Promise<void> => {
+  try {
+    const { error } = await supabaseAdmin
+      .from('daily_history')
+      .upsert({
+        participant_id: participantId,
+        date,
+        steps,
+      }, {
+        onConflict: 'participant_id,date'
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving daily history:', error);
+  }
+};
+
+// ============================================
+// WILDCARD OPERATIONS
+// ============================================
+
+export const saveWildcardResult = async (result: WildcardResult): Promise<void> => {
+  try {
+    const { error } = await supabaseAdmin
+      .from('wildcard_results')
+      .upsert({
+        date: result.date,
+        category: result.category,
+        winner_id: result.winnerId,
+        winner_name: result.winnerName,
+        value: result.value,
+        description: result.description,
+      }, {
+        onConflict: 'date'
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving wildcard result:', error);
+  }
+};
+
+export const getWildcardResults = async (): Promise<WildcardResult[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('wildcard_results')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map((r: DbWildcardResult) => ({
+      id: `${r.date}-${r.category}`,
+      date: r.date,
+      category: r.category as any,
+      winnerId: r.winner_id,
+      winnerName: r.winner_name,
+      value: r.value,
+      description: r.description,
+      timestamp: new Date(r.created_at).getTime(),
+    }));
+  } catch (error) {
+    console.error('Error loading wildcard results:', error);
+    return [];
+  }
+};
+
+export const getTodaysWildcard = async (): Promise<WildcardResult | null> => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase
+      .from('wildcard_results')
+      .select('*')
+      .eq('date', today)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null; // No rows returned
+      throw error;
+    }
+
+    if (!data) return null;
+
+    return {
+      id: `${data.date}-${data.category}`,
+      date: data.date,
+      category: data.category as any,
+      winnerId: data.winner_id,
+      winnerName: data.winner_name,
+      value: data.value,
+      description: data.description,
+      timestamp: new Date(data.created_at).getTime(),
+    };
+  } catch (error) {
+    console.error('Error loading today\'s wildcard:', error);
+    return null;
+  }
+};
+
+// ============================================
+// WEEKLY MILESTONE OPERATIONS
+// ============================================
+
+export const getCurrentWeekProgress = async (): Promise<Map<string, { weekSteps: number; achieved70k: boolean }>> => {
+  try {
+    const { data, error } = await supabase
+      .from('current_week_progress')
+      .select('*');
+
+    if (error) throw error;
+
+    const progressMap = new Map();
+    (data || []).forEach((row: any) => {
+      progressMap.set(row.id, {
+        weekSteps: row.week_steps,
+        achieved70k: row.achieved_70k,
+      });
+    });
+
+    return progressMap;
+  } catch (error) {
+    console.error('Error loading weekly progress:', error);
+    return new Map();
+  }
+};
+
+export const saveWeeklyMilestone = async (
+  participantId: string,
+  weekStart: string,
+  weekEnd: string,
+  totalSteps: number,
+  achieved70k: boolean
+): Promise<void> => {
+  try {
+    const { error } = await supabaseAdmin
+      .from('weekly_milestones')
+      .upsert({
+        participant_id: participantId,
+        week_start: weekStart,
+        week_end: weekEnd,
+        total_steps: totalSteps,
+        achieved_70k: achieved70k,
+      }, {
+        onConflict: 'participant_id,week_start'
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving weekly milestone:', error);
+  }
+};
+
+export const getWeeklyMilestones = async (weekStart: string): Promise<DbWeeklyMilestone[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('weekly_milestones')
+      .select('*')
+      .eq('week_start', weekStart);
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
+    console.error('Error loading weekly milestones:', error);
+    return [];
+  }
+};
+
+// ============================================
+// CONFIG OPERATIONS
+// ============================================
+
+export const loadConfig = async (): Promise<ChallengeConfig> => {
+  try {
+    const { data, error } = await supabase
+      .from('challenge_config')
+      .select('value')
+      .eq('key', 'main_config')
+      .single();
+
+    if (error) throw error;
+
+    return data?.value || DEFAULT_CONFIG;
+  } catch (error) {
+    console.error('Error loading config:', error);
+    return DEFAULT_CONFIG;
+  }
+};
+
+export const saveConfig = async (config: ChallengeConfig): Promise<void> => {
+  try {
+    const { error } = await supabaseAdmin
+      .from('challenge_config')
+      .upsert({
+        key: 'main_config',
+        value: config,
+      }, {
+        onConflict: 'key'
+      });
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving config:', error);
+  }
+};
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+export const getLastSaved = (): Date | null => {
+  // Always return current time since data is always fresh from Supabase
+  return new Date();
+};
+
+export const downloadBackup = async (): Promise<void> => {
+  try {
+    const participants = await loadParticipants();
+    const config = await loadConfig();
+    const wildcardResults = await getWildcardResults();
+
+    const backup = {
+      version: '2.0',
+      timestamp: new Date().toISOString(),
+      participants,
+      config,
+      wildcardResults,
+    };
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `step-challenge-backup-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading backup:', error);
+  }
+};
+
+export const importData = async (file: File): Promise<void> => {
+  // Import functionality - would need careful implementation
+  console.log('Import not yet implemented for Supabase');
+  alert('Import functionality coming soon for Supabase version');
+};
