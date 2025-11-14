@@ -21,7 +21,7 @@ export const WildcardLeaderboard: React.FC<WildcardLeaderboardProps> = ({ partic
         </div>
         <p className="text-gray-400">No wildcard points awarded yet!</p>
         <p className="text-sm text-gray-500 mt-2">
-          Wildcard challenges begin after Heat Week (Nov 18)
+          Wildcard challenges begin after Heat Week (Nov 17+)
         </p>
       </div>
     );

@@ -26,7 +26,8 @@ export const checkAndRunAutomatedWildcard = async (participants: Participant[]):
     const existingDates = new Set(existingResults.map(r => r.date));
 
     // Find all dates that should have a wildcard
-    const heatWeekEnd = new Date('2025-11-17T23:59:59');
+    // Heat Week: Nov 10-16, Wildcard starts Nov 17
+    const heatWeekEnd = new Date('2025-11-16T23:59:59');
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -40,7 +41,7 @@ export const checkAndRunAutomatedWildcard = async (participants: Participant[]):
     // Find all missing dates between Heat Week end and yesterday
     const missingDates: string[] = [];
     const currentDate = new Date(heatWeekEnd);
-    currentDate.setDate(currentDate.getDate() + 1); // Start day after Heat Week
+    currentDate.setDate(currentDate.getDate() + 1); // Start Nov 17 (first day after Heat Week)
 
     while (currentDate <= yesterday) {
       const dateStr = currentDate.toISOString().split('T')[0];
@@ -101,8 +102,8 @@ export const checkAndRunAutomatedTeamFormation = async (
   config: any
 ): Promise<boolean> => {
   try {
-    // Check if we're after Heat Week ends (midnight Nov 17 -> Nov 18 00:00:00)
-    const heatWeekEnd = new Date('2025-11-18T00:00:00');
+    // Check if we're after Heat Week ends (midnight Nov 16 -> Nov 17 00:00:00 Monday morning)
+    const heatWeekEnd = new Date('2025-11-17T00:00:00');
     const now = new Date();
 
     if (now < heatWeekEnd) {

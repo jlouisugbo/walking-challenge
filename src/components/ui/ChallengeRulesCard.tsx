@@ -85,11 +85,11 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
           <section>
             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
               <Flame className="w-6 h-6 text-orange-500" />
-              Heat Week (Nov 18-24)
+              Heat Week (Nov 10-16)
             </h3>
             <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-lg p-4 space-y-2">
               <p className="text-gray-300 text-sm">
-                <strong className="text-white">When:</strong> Monday, Nov 18 @ 12:00 AM EST - Sunday, Nov 24
+                <strong className="text-white">When:</strong> Monday, Nov 10 @ 12:00 AM EST - Sunday, Nov 16 @ 11:59 PM EST
               </p>
               <p className="text-gray-300 text-sm">
                 <strong className="text-white">What Happens:</strong> Team competition pauses. Everyone competes individually for one week.
@@ -108,7 +108,7 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
             </h3>
             <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg p-4 space-y-2">
               <p className="text-gray-300 text-sm">
-                <strong className="text-white">Active:</strong> After Heat Week ends (Nov 18+)
+                <strong className="text-white">Active:</strong> After Heat Week ends (Nov 17+)
               </p>
               <p className="text-gray-300 text-sm">
                 <strong className="text-white">How to Win:</strong> Each day, a random challenge is selected (e.g., "Most Improved", "Best Streak", "Weekend Warrior"). The winner gets +1 wildcard point!

@@ -57,7 +57,7 @@ export const HeatWeek: React.FC = () => {
             <span className="text-yellow-400 font-semibold">Team Captain</span> title!
           </p>
           <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mt-4">
-            <div className="text-sm text-blue-300 font-semibold mb-2">📅 Monday, Nov 18 @ 12:00 AM EST</div>
+            <div className="text-sm text-blue-300 font-semibold mb-2">📅 Monday, Nov 17 @ 12:00 AM EST</div>
             <p className="text-sm text-gray-300">
               Teams will be automatically and randomly generated based on Sunday night's rankings.
               The top 5 will be designated as captains, and all participants will be randomly assigned

@@ -315,9 +315,9 @@ export const calculateWildcardWinner = (
   };
 };
 
-// Check if Heat Week has passed (Nov 18, 2025)
+// Check if Heat Week has passed (Nov 10-16, 2025)
 export const isAfterHeatWeek = (date: Date = new Date()): boolean => {
-  const heatWeekEnd = new Date('2025-11-18T23:59:59');
+  const heatWeekEnd = new Date('2025-11-16T23:59:59');
   return date > heatWeekEnd;
 };
 

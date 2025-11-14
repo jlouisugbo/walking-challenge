@@ -1163,7 +1163,7 @@ const WildcardTab: React.FC = () => {
           Wildcard Challenge System
         </h2>
         <p className="text-gray-400">
-          Award daily wildcard points for special achievements. Wildcard challenges are only active after Heat Week (Nov 18, 2025).
+          Award daily wildcard points for special achievements. Wildcard challenges are only active after Heat Week ends (Nov 17+, 2025).
         </p>
       </div>
 
@@ -1174,7 +1174,7 @@ const WildcardTab: React.FC = () => {
             Wildcard Not Active
           </div>
           <p className="text-sm text-gray-400">
-            Wildcard challenges begin after Heat Week ends on November 18, 2025. The selected date ({selectedDate}) is before this date.
+            Wildcard challenges begin after Heat Week ends on November 16, 2025. The selected date ({selectedDate}) is before this date.
           </p>
         </div>
       )}
