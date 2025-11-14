@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 // Supabase configuration from environment variables
 // Set these in .env.local for development or in Vercel Environment Variables for production
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://bjaqorctnozmvmahhncs.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_Y8ya5T4DMHZDaSfb6MMNfQ_0URVb33B';
-const SUPABASE_SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY || 'sb_secret_2MmQFfIyDjubhnhGRDCHvA_G-v9E6Gn';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqYXFvcmN0bm96bXZtYWhobmNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMjU3MjcsImV4cCI6MjA3ODcwMTcyN30.ikMB1mEiaHPHWKroHzgPl1lMD9pnUEbg2NIglwNgLYM';
+const SUPABASE_SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqYXFvcmN0bm96bXZtYWhobmNzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzEyNTcyNywiZXhwIjoyMDc4NzAxNzI3fQ.mBHnjf038mFSTY4nPLhZ8ziqEJAunkhgKHUV7rZB4_Y';
 
 // Log environment status (helpful for debugging)
 console.log('Supabase Environment Check:', {
