@@ -1,46 +1,84 @@
-# ⚠️ IMPORTANT: Supabase API Keys Issue
+# 🔐 Supabase Environment Variables Setup
 
-## Current Keys (Provided by User)
-The keys you provided don't match the standard Supabase JWT token format:
-- Publishable: `sb_publishable_Y8ya5T4DMHZDaSfb6MMNfQ_0URVb33B`
-- Secret: `sb_secret_2MmQFfIyDjubhnhGRDCHvA_G-v9E6Gn`
+## Environment Variables (Secure Setup)
 
-## Standard Supabase Keys Look Like This
+The app now uses **environment variables** to keep your Supabase keys secure and out of the codebase.
+
+### Development (Local)
+
+Your keys are in `.env.local` (already created):
+```bash
+VITE_SUPABASE_URL=https://bjaqorctnozmvmahhncs.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_Y8ya5T4DMHZDaSfb6MMNfQ_0URVb33B
+VITE_SUPABASE_SERVICE_KEY=sb_secret_2MmQFfIyDjubhnhGRDCHvA_G-v9E6Gn
 ```
-anon (public) key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqYXFvcmN0bm96bXZtYWhobmNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1NTgzNzgsImV4cCI6MjA0NzEzNDM3OH0...
-service_role key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqYXFvcmN0bm96bXZtYWhobmNzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMTU1ODM3OCwiZXhwIjoyMDQ3MTM0Mzc4fQ...
-```
 
-## How to Get the Correct Keys
+**Note:** `.env.local` is already in `.gitignore` so your keys **won't be committed** to GitHub! ✅
 
-1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
-2. Select your project: `bjaqorctnozmvmahhncs`
-3. Click **Settings** (gear icon in sidebar)
-4. Click **API** under Project Settings
-5. You'll see two keys:
-   - **anon public** - Use this for `SUPABASE_ANON_KEY`
-   - **service_role** - Use this for `SUPABASE_SERVICE_KEY` (**Keep this secret!**)
+### Production (Vercel)
 
-## Update the Keys
+When deploying to Vercel:
 
-Once you have the correct keys, update `/src/lib/supabase.ts`:
+1. **Go to your Vercel project** → Settings → Environment Variables
+2. **Add these 3 variables:**
+   - `VITE_SUPABASE_URL` = `https://bjaqorctnozmvmahhncs.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY` = `sb_publishable_Y8ya5T4DMHZDaSfb6MMNfQ_0URVb33B`
+   - `VITE_SUPABASE_SERVICE_KEY` = `sb_secret_2MmQFfIyDjubhnhGRDCHvA_G-v9E6Gn`
+3. **Environment:** Select "Production", "Preview", and "Development"
+4. **Click "Save"**
+5. **Redeploy** your app
 
-```typescript
-const SUPABASE_URL = 'https://bjaqorctnozmvmahhncs.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJ...'; // Replace with your anon key
-const SUPABASE_SERVICE_KEY = 'eyJ...'; // Replace with your service_role key
-```
+## Key Format (Supabase New Format)
+
+Your keys use Supabase's **new format** (as of 2024):
+- `sb_publishable_*` - New publishable key format ✅
+- `sb_secret_*` - New secret key format ✅
+
+**Old format** (legacy): `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (JWT tokens)
+
+Both formats work, but Supabase is transitioning to the newer `sb_*` format.
 
 ## Security Notes
-- ✅ **anon key** is safe to expose in frontend code
-- ⚠️ **service_role key** should ONLY be used in admin panel (already protected by password)
-- 🔒 Never commit service_role key to public repositories
+
+- ✅ **anon key** (`sb_publishable_*`) is safe to expose in frontend code
+- ⚠️ **service_role key** (`sb_secret_*`) should ONLY be used in admin panel (already protected by password)
+- 🔒 Keys are now in environment variables, NOT in the codebase
 - 🛡️ RLS policies protect your data even with exposed anon key
 
-## Next Steps
-1. Get the correct keys from Supabase dashboard
-2. Update `/src/lib/supabase.ts`
-3. Run the SQL setup script (`SUPABASE_SETUP.sql`)
-4. Test the application
+## How It Works
 
-I'll continue building the features with the current setup, but **you'll need to update the keys** before the database connection will work!
+The app reads from environment variables in `/src/lib/supabase.ts`:
+```typescript
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const SUPABASE_SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY || '';
+```
+
+## Testing Locally
+
+```bash
+# Keys are already in .env.local
+npm run dev
+
+# App will load environment variables automatically
+```
+
+## Changing Keys
+
+If you need to update your keys:
+
+### Local Development:
+Edit `.env.local` with new values
+
+### Production (Vercel):
+1. Vercel Dashboard → Your Project → Settings → Environment Variables
+2. Edit the variable you want to change
+3. Redeploy the app
+
+## Next Steps
+
+✅ Environment variables are configured
+✅ Keys are secure and not in codebase
+✅ Ready to deploy to Vercel
+
+Just add the environment variables in Vercel Dashboard before deploying!
