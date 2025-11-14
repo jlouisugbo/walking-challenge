@@ -2,14 +2,16 @@ import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration from environment variables
 // Set these in .env.local for development or in Vercel Environment Variables for production
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const SUPABASE_SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY || '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://bjaqorctnozmvmahhncs.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_Y8ya5T4DMHZDaSfb6MMNfQ_0URVb33B';
+const SUPABASE_SERVICE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY || 'sb_secret_2MmQFfIyDjubhnhGRDCHvA_G-v9E6Gn';
 
-// Validate environment variables
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_KEY) {
-  console.error('Missing Supabase environment variables. Please check your .env.local file or Vercel Environment Variables.');
-}
+// Log environment status (helpful for debugging)
+console.log('Supabase Environment Check:', {
+  url: SUPABASE_URL ? '✓ Loaded' : '✗ Missing',
+  anonKey: SUPABASE_ANON_KEY ? '✓ Loaded' : '✗ Missing',
+  serviceKey: SUPABASE_SERVICE_KEY ? '✓ Loaded' : '✗ Missing',
+});
 
 // Public client for reads (anon key)
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
