@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Supabase Connection Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #1a1f2e;
+      color: #fff;
+    }
+    button {
+      background: #00d4ff;
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 10px 5px;
+    }
+    button:hover { background: #00b8e6; }
+    .result {
+      background: #2a3142;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      border-left: 4px solid #00d4ff;
+    }
+    .error {
+      border-left-color: #ff4444;
+      color: #ff8888;
+    }
+    .success {
+      border-left-color: #44ff44;
+      color: #88ff88;
+    }
+    pre {
+      background: #000;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Supabase Database Test</h1>
+  <p>This page tests if your Supabase database is working correctly.</p>
+
+  <div>
+    <button onclick="testRead()">Test READ (anon key)</button>
+    <button onclick="testWrite()">Test WRITE (service key)</button>
+    <button onclick="testUpdate()">Test UPDATE (service key)</button>
+    <button onclick="clearResults()">Clear Results</button>
+  </div>
+
+  <div id="results"></div>
+
+  <script>
+    const SUPABASE_URL = 'https://bjaqorctnozmvmahhncs.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Y8ya5T4DMHZDaSfb6MMNfQ_0URVb33B';
+    const SUPABASE_SERVICE_KEY = 'sb_secret_2MmQFfIyDjubhnhGRDCHvA_G-v9E6Gn';
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseAdmin = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    function addResult(title, content, type = 'result') {
+      const div = document.createElement('div');
+      div.className = `result ${type}`;
+      div.innerHTML = `<h3>${title}</h3><pre>${content}</pre>`;
+      document.getElementById('results').prepend(div);
+    }
+
+    async function testRead() {
+      try {
+        const { data, error } = await supabase
+          .from('participants')
+          .select('*')
+          .limit(5);
+
+        if (error) throw error;
+
+        addResult(
+          '✅ READ Test Passed',
+          `Found ${data.length} participants:\n${JSON.stringify(data, null, 2)}`,
+          'success'
+        );
+      } catch (error) {
+        addResult(
+          '❌ READ Test Failed',
+          `Error: ${error.message}\n\nThis means:\n- RLS might be blocking reads\n- Or table doesn't exist`,
+          'error'
+        );
+      }
+    }
+
+    async function testWrite() {
+      try {
+        const testName = `Test User ${Date.now()}`;
+        const { data, error } = await supabaseAdmin
+          .from('participants')
+          .insert({
+            name: testName,
+            total_steps: 1000,
+            points: 0,
+            team: null,
+            notes: 'Test entry'
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        addResult(
+          '✅ WRITE Test Passed',
+          `Successfully created participant:\n${JSON.stringify(data, null, 2)}`,
+          'success'
+        );
+      } catch (error) {
+        addResult(
+          '❌ WRITE Test Failed',
+          `Error: ${error.message}\n\nThis means:\n- Service key doesn't have permission\n- RLS is blocking inserts\n- Check SUPABASE_RLS_POLICIES.sql`,
+          'error'
+        );
+      }
+    }
+
+    async function testUpdate() {
+      try {
+        // Get first participant
+        const { data: participants } = await supabase
+          .from('participants')
+          .select('*')
+          .limit(1)
+          .single();
+
+        if (!participants) {
+          throw new Error('No participants found to update. Create one first!');
+        }
+
+        // Update it
+        const { data, error } = await supabaseAdmin
+          .from('participants')
+          .update({ total_steps: participants.total_steps + 100 })
+          .eq('id', participants.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        addResult(
+          '✅ UPDATE Test Passed',
+          `Successfully updated participant:\nOld steps: ${participants.total_steps}\nNew steps: ${data.total_steps}`,
+          'success'
+        );
+      } catch (error) {
+        addResult(
+          '❌ UPDATE Test Failed',
+          `Error: ${error.message}`,
+          'error'
+        );
+      }
+    }
+
+    function clearResults() {
+      document.getElementById('results').innerHTML = '';
+    }
+
+    // Auto-test on load
+    window.onload = () => {
+      addResult('🔍 Starting Tests...', 'Testing database connection...', 'result');
+      setTimeout(testRead, 500);
+    };
+  </script>
+</body>
+</html>
