@@ -41,10 +41,72 @@ export const Statistics: React.FC = () => {
 
   const trendData = generateTrendData();
 
-  // Top performers by different metrics
-  const topBySteps = [...rankedParticipants].slice(0, 10);
-  const topByProgress = [...rankedParticipants]
-    .sort((a, b) => b.progressPercent - a.progressPercent)
+  // Calculate advanced statistics
+  const calculateStdDev = (values: number[]): number => {
+    if (values.length === 0) return 0;
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    const squareDiffs = values.map((value) => Math.pow(value - avg, 2));
+    const avgSquareDiff = squareDiffs.reduce((a, b) => a + b, 0) / squareDiffs.length;
+    return Math.sqrt(avgSquareDiff);
+  };
+
+  const mostConsistent = [...rankedParticipants]
+    .filter((p) => p.dailyHistory && p.dailyHistory.length >= 3)
+    .map((p) => {
+      const steps = p.dailyHistory!.map((d) => d.steps);
+      const stdDev = calculateStdDev(steps);
+      return { ...p, stdDev };
+    })
+    .sort((a, b) => a.stdDev - b.stdDev)
+    .slice(0, 10);
+
+  const wildcardLeaders = [...rankedParticipants]
+    .filter((p) => p.points > 0)
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 10);
+
+  const topByDistance = [...rankedParticipants]
+    .map((p) => ({
+      ...p,
+      miles: (p.totalSteps * 0.0004734848).toFixed(1), // Average step to miles conversion
+    }))
+    .slice(0, 10);
+
+  const weekendWarriors = [...rankedParticipants]
+    .filter((p) => p.dailyHistory && p.dailyHistory.length > 0)
+    .map((p) => {
+      const weekendSteps = p.dailyHistory!
+        .filter((d) => {
+          const day = new Date(d.date).getDay();
+          return day === 0 || day === 6; // Sunday or Saturday
+        })
+        .reduce((sum, d) => sum + d.steps, 0);
+      return { ...p, weekendSteps };
+    })
+    .filter((p) => p.weekendSteps > 0)
+    .sort((a, b) => b.weekendSteps - a.weekendSteps)
+    .slice(0, 10);
+
+  const bestStreaks = [...rankedParticipants]
+    .filter((p) => p.dailyHistory && p.dailyHistory.length > 0)
+    .map((p) => {
+      const sorted = [...p.dailyHistory!].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      let maxStreak = 0;
+      let currentStreak = 0;
+      for (const day of sorted) {
+        if (day.steps >= 10000) {
+          currentStreak++;
+          maxStreak = Math.max(maxStreak, currentStreak);
+        } else {
+          currentStreak = 0;
+        }
+      }
+      return { ...p, streak: maxStreak };
+    })
+    .filter((p) => p.streak > 0)
+    .sort((a, b) => b.streak - a.streak)
     .slice(0, 10);
 
   const COLORS = ['#00d4ff', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -207,13 +269,58 @@ export const Statistics: React.FC = () => {
         </div>
       )}
 
-      {/* Top Performers */}
+      {/* Advanced Statistics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top by Steps */}
+        {/* Most Consistent */}
+        {mostConsistent.length > 0 && (
+          <div className="glass-card p-6">
+            <h2 className="text-xl font-bold text-white mb-4">👑 Most Consistent Performers</h2>
+            <p className="text-xs text-gray-400 mb-3">Lowest variance in daily steps</p>
+            <div className="space-y-2">
+              {mostConsistent.map((p, index) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-400 font-bold">#{index + 1}</span>
+                    <span className="text-white">{p.name}</span>
+                  </div>
+                  <span className="text-purple-400 font-semibold">±{formatNumber(Math.round(p.stdDev))}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Wildcard Leaders */}
+        {wildcardLeaders.length > 0 && (
+          <div className="glass-card p-6">
+            <h2 className="text-xl font-bold text-white mb-4">✨ Wildcard Points Leaders</h2>
+            <p className="text-xs text-gray-400 mb-3">Most daily challenge wins</p>
+            <div className="space-y-2">
+              {wildcardLeaders.map((p, index) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-400 font-bold">#{index + 1}</span>
+                    <span className="text-white">{p.name}</span>
+                  </div>
+                  <span className="text-yellow-400 font-semibold">{p.points} pts</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Total Distance */}
         <div className="glass-card p-6">
-          <h2 className="text-xl font-bold text-white mb-4">🏆 Top 10 by Steps</h2>
+          <h2 className="text-xl font-bold text-white mb-4">🗺️ Distance Walked (Miles)</h2>
+          <p className="text-xs text-gray-400 mb-3">Estimated total distance covered</p>
           <div className="space-y-2">
-            {topBySteps.map((p, index) => (
+            {topByDistance.map((p, index) => (
               <div
                 key={p.id}
                 className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
@@ -222,28 +329,79 @@ export const Statistics: React.FC = () => {
                   <span className="text-gray-400 font-bold">#{index + 1}</span>
                   <span className="text-white">{p.name}</span>
                 </div>
-                <span className="text-accent font-semibold stat-number">{formatNumber(p.totalSteps)}</span>
+                <span className="text-blue-400 font-semibold">{p.miles} mi</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Top by Progress */}
-        <div className="glass-card p-6">
-          <h2 className="text-xl font-bold text-white mb-4">📈 Top 10 by Progress</h2>
-          <div className="space-y-2">
-            {topByProgress.map((p, index) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-400 font-bold">#{index + 1}</span>
-                  <span className="text-white">{p.name}</span>
+        {/* Weekend Warriors */}
+        {weekendWarriors.length > 0 && (
+          <div className="glass-card p-6">
+            <h2 className="text-xl font-bold text-white mb-4">🎉 Weekend Warriors</h2>
+            <p className="text-xs text-gray-400 mb-3">Most steps on weekends</p>
+            <div className="space-y-2">
+              {weekendWarriors.map((p, index) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-400 font-bold">#{index + 1}</span>
+                    <span className="text-white">{p.name}</span>
+                  </div>
+                  <span className="text-pink-400 font-semibold stat-number">{formatNumber(p.weekendSteps)}</span>
                 </div>
-                <span className="text-green-400 font-semibold">{p.progressPercent.toFixed(1)}%</span>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Best Streaks */}
+        {bestStreaks.length > 0 && (
+          <div className="glass-card p-6">
+            <h2 className="text-xl font-bold text-white mb-4">🔥 Best Streaks</h2>
+            <p className="text-xs text-gray-400 mb-3">Consecutive days with 10k+ steps</p>
+            <div className="space-y-2">
+              {bestStreaks.map((p, index) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-400 font-bold">#{index + 1}</span>
+                    <span className="text-white">{p.name}</span>
+                  </div>
+                  <span className="text-orange-400 font-semibold">{p.streak} days</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Average Daily Steps */}
+        <div className="glass-card p-6">
+          <h2 className="text-xl font-bold text-white mb-4">📊 Highest Daily Average</h2>
+          <p className="text-xs text-gray-400 mb-3">Average steps per day</p>
+          <div className="space-y-2">
+            {rankedParticipants
+              .filter((p) => p.dailyAverage && p.dailyAverage > 0)
+              .sort((a, b) => (b.dailyAverage || 0) - (a.dailyAverage || 0))
+              .slice(0, 10)
+              .map((p, index) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-400 font-bold">#{index + 1}</span>
+                    <span className="text-white">{p.name}</span>
+                  </div>
+                  <span className="text-green-400 font-semibold stat-number">
+                    {formatNumber(Math.round(p.dailyAverage || 0))}
+                  </span>
+                </div>
+              ))}
           </div>
         </div>
       </div>

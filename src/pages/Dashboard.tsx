@@ -1,10 +1,11 @@
 import React from 'react';
-import { Trophy, Users, Target, TrendingUp, Ticket, Footprints } from 'lucide-react';
+import { Trophy, Users, Target, TrendingUp, Ticket, Footprints, Sparkles } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { CountdownTimer } from '../components/ui/CountdownTimer';
 import { StatsCard } from '../components/ui/StatsCard';
 import { ParticipantCard } from '../components/ui/ParticipantCard';
 import { formatNumber, calculateDaysElapsed, isHeatWeek } from '../utils/calculations';
+import { isAfterHeatWeek, getWildcardResults, WILDCARD_CATEGORIES } from '../utils/wildcardSystem';
 
 export const Dashboard: React.FC = () => {
   const {
@@ -20,6 +21,17 @@ export const Dashboard: React.FC = () => {
   const topThree = rankedParticipants.slice(0, 3);
   const daysElapsed = calculateDaysElapsed(config.startDate);
   const inHeatWeek = isHeatWeek(config.startDate);
+
+  // Wildcard system
+  const wildcardActive = isAfterHeatWeek();
+  const wildcardResults = getWildcardResults();
+  const latestWildcard = wildcardResults.length > 0
+    ? wildcardResults.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+    : null;
+  const topWildcardLeaders = [...rankedParticipants]
+    .filter((p) => p.points > 0)
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 3);
 
   return (
     <div className="space-y-8 animate-slide-up">
@@ -81,6 +93,80 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Wildcard System */}
+      {wildcardActive && (
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Sparkles className="w-7 h-7 text-purple-400" />
+            Wildcard Challenge
+          </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Latest Winner */}
+            {latestWildcard && (
+              <div className="glass-card p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">{(WILDCARD_CATEGORIES as any)[latestWildcard.category].emoji}</span>
+                  <h3 className="text-lg font-bold text-white">Latest Winner</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-xl font-bold text-purple-300">
+                    🏆 {latestWildcard.winnerName}
+                  </div>
+                  <div className="text-sm text-gray-300">
+                    {(WILDCARD_CATEGORIES as any)[latestWildcard.category].name}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {latestWildcard.description}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-2">
+                    {new Date(latestWildcard.date).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Top Points Leaders */}
+            <div className="glass-card p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-5 h-5 text-yellow-400" />
+                <h3 className="text-lg font-bold text-white">Top Wildcard Leaders</h3>
+              </div>
+              {topWildcardLeaders.length > 0 ? (
+                <div className="space-y-2">
+                  {topWildcardLeaders.map((participant, index) => (
+                    <div
+                      key={participant.id}
+                      className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
+                        <span className="text-white">{participant.name}</span>
+                      </div>
+                      <div className="text-yellow-400 font-semibold">
+                        {participant.points} pts
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-400 py-4">
+                  <p className="text-sm">No wildcard points awarded yet!</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="glass-card p-4 bg-purple-500/10 border border-purple-500/30">
+            <p className="text-sm text-gray-300 text-center">
+              💡 <strong>Wildcard Challenge:</strong> Earn bonus points by winning daily challenges!
+              The participant with the most wildcard points at the end wins a special prize.
+              Check the Admin panel after each nightly leaderboard update to see who won today's challenge.
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* Top 3 Leaders */}
       <section className="space-y-4">

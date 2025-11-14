@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy } from 'lucide-react';
+import { Trophy, Sparkles } from 'lucide-react';
 import type { ParticipantWithRank } from '../../types';
 import { formatNumber, getRankMedal, getRankColor } from '../../utils/calculations';
 import { ProgressBar } from './ProgressBar';
@@ -64,6 +64,13 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
             <MilestoneIndicator milestones={participant.milestones} size="sm" />
 
             <div className="flex items-center gap-4 text-sm">
+              {participant.points > 0 && (
+                <div className="flex items-center gap-1 text-purple-400">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="font-semibold">{participant.points} pts</span>
+                </div>
+              )}
+
               {participant.raffleTickets > 0 && (
                 <div className="flex items-center gap-1 text-yellow-400">
                   <span>🎟️</span>

@@ -8,6 +8,7 @@ export interface Participant {
   id: string;
   name: string;
   totalSteps: number;
+  points: number; // Wildcard points (starts after Heat Week)
   team: string | null;
   notes: string;
   createdAt: number;
@@ -32,6 +33,7 @@ export interface ParticipantWithRank extends Participant {
   prize?: number;
   dailyAverage?: number;
   trend?: 'up' | 'down' | 'stable';
+  pointsRank?: number; // Rank by points
 }
 
 export interface MilestoneStatus {
@@ -124,4 +126,35 @@ export interface ComparisonParticipant {
   id: string;
   name: string;
   color: string;
+}
+
+export type WildcardCategory =
+  | 'best-improved'      // Highest % increase from previous day
+  | 'most-steps-day'     // Highest single day step count
+  | 'greatest-increase'  // Biggest absolute increase from previous day
+  | 'consistency-king'   // Lowest standard deviation over last 7 days
+  | 'weekend-warrior'    // Most steps on a weekend day
+  | 'comeback-kid'       // Biggest recovery after a low day
+  | 'streak-master'      // Most consecutive days hitting 10k steps
+  | 'average-excellence' // Highest average over last 3 days
+  | 'over-achiever'      // Most above personal average
+  | 'daily-dominator';   // Highest steps for specific day of week
+
+export interface WildcardResult {
+  id: string;
+  date: string; // YYYY-MM-DD
+  category: WildcardCategory;
+  winnerId: string;
+  winnerName: string;
+  value: number; // The winning value (steps, %, etc.)
+  description: string; // Human-readable description
+  timestamp: number;
+}
+
+export interface WildcardCategories {
+  [key: string]: {
+    name: string;
+    description: string;
+    emoji: string;
+  };
 }

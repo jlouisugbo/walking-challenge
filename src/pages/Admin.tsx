@@ -10,6 +10,7 @@ import {
   Save,
   AlertTriangle,
   Calendar,
+  Sparkles,
 } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { parsePacerLeaderboardFlexible } from '../utils/pacerParser';
@@ -18,8 +19,16 @@ import { downloadBackup, importData } from '../utils/storage';
 import { formatNumber } from '../utils/calculations';
 import type { UpdatePreview } from '../types';
 import { AdminProtected } from '../components/common/AdminProtected';
+import {
+  getRandomWildcardCategory,
+  calculateWildcardWinner,
+  WILDCARD_CATEGORIES,
+  isAfterHeatWeek,
+  getWildcardResults,
+  saveWildcardResult,
+} from '../utils/wildcardSystem';
 
-type Tab = 'paste' | 'csv' | 'historical' | 'manual' | 'teams' | 'settings' | 'data';
+type Tab = 'paste' | 'csv' | 'historical' | 'wildcard' | 'manual' | 'teams' | 'settings' | 'data';
 
 export const Admin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('csv');
@@ -50,6 +59,12 @@ export const Admin: React.FC = () => {
             onClick={() => setActiveTab('historical')}
             icon={Calendar}
             label="Historical Data"
+          />
+          <TabButton
+            active={activeTab === 'wildcard'}
+            onClick={() => setActiveTab('wildcard')}
+            icon={Sparkles}
+            label="Wildcard"
           />
           <TabButton
             active={activeTab === 'paste'}
@@ -88,6 +103,7 @@ export const Admin: React.FC = () => {
       <div className="min-h-[400px]">
         {activeTab === 'csv' && <CSVTab />}
         {activeTab === 'historical' && <HistoricalTab />}
+        {activeTab === 'wildcard' && <WildcardTab />}
         {activeTab === 'paste' && <PasteTab />}
         {activeTab === 'manual' && <ManualTab />}
         {activeTab === 'teams' && <TeamsTab />}
@@ -1045,6 +1061,189 @@ const DataTab: React.FC = () => {
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+// Wildcard Tab Component
+const WildcardTab: React.FC = () => {
+  const { participants, awardWildcardPoint } = useChallenge();
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [result, setResult] = useState<any>(null);
+
+  const wildcardHistory = getWildcardResults();
+  const isEnabled = isAfterHeatWeek(new Date(selectedDate));
+
+  const handleCalculateWildcard = () => {
+    if (!selectedCategory) {
+      alert('Please select a wildcard category first!');
+      return;
+    }
+
+    setIsCalculating(true);
+
+    const category = selectedCategory as any;
+    const winner = calculateWildcardWinner(category, participants, selectedDate);
+
+    if (winner) {
+      setResult(winner);
+    } else {
+      alert('Could not calculate a winner for this category. Make sure participants have sufficient data.');
+    }
+
+    setIsCalculating(false);
+  };
+
+  const handleAwardPoint = () => {
+    if (!result) return;
+
+    // Award the point
+    awardWildcardPoint(result.winnerId);
+
+    // Save to wildcard history
+    saveWildcardResult(result);
+
+    alert(`✨ Wildcard point awarded to ${result.winnerName}!`);
+    setResult(null);
+  };
+
+  const handleRandomCategory = () => {
+    const random = getRandomWildcardCategory();
+    setSelectedCategory(random);
+  };
+
+  return (
+    <div className="glass-card p-6 space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+          <Sparkles className="w-6 h-6 text-purple-400" />
+          Wildcard Challenge System
+        </h2>
+        <p className="text-gray-400">
+          Award daily wildcard points for special achievements. Wildcard challenges are only active after Heat Week (Nov 18, 2025).
+        </p>
+      </div>
+
+      {!isEnabled && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-yellow-400 font-semibold mb-2">
+            <AlertTriangle className="w-5 h-5" />
+            Wildcard Not Active
+          </div>
+          <p className="text-sm text-gray-400">
+            Wildcard challenges begin after Heat Week ends on November 18, 2025. The selected date ({selectedDate}) is before this date.
+          </p>
+        </div>
+      )}
+
+      {/* Date Selection */}
+      <div className="bg-primary-light/50 rounded-lg p-4">
+        <label className="block text-sm font-semibold text-white mb-2">Challenge Date</label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="w-full px-4 py-2 bg-primary-light rounded-lg border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent"
+        />
+      </div>
+
+      {/* Category Selection */}
+      <div className="bg-primary-light/50 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-semibold text-white">Wildcard Category</label>
+          <button
+            onClick={handleRandomCategory}
+            className="text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-3 py-1 rounded transition-all"
+          >
+            🎲 Random Category
+          </button>
+        </div>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="w-full px-4 py-2 bg-primary-light rounded-lg border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent"
+        >
+          <option value="">-- Select a Category --</option>
+          {Object.entries(WILDCARD_CATEGORIES).map(([key, cat]: [string, any]) => (
+            <option key={key} value={key}>
+              {cat.emoji} {cat.name} - {cat.description}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Calculate Winner Button */}
+      <div>
+        <button
+          onClick={handleCalculateWildcard}
+          disabled={!selectedCategory || isCalculating || !isEnabled}
+          className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isCalculating ? 'Calculating...' : '🎯 Calculate Winner'}
+        </button>
+      </div>
+
+      {/* Result Display */}
+      {result && (
+        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-2 border-purple-500/50 rounded-lg p-6">
+          <div className="text-center mb-4">
+            <div className="text-4xl mb-2">
+              {WILDCARD_CATEGORIES[result.category].emoji}
+            </div>
+            <h3 className="text-xl font-bold text-white mb-1">
+              {WILDCARD_CATEGORIES[result.category].name}
+            </h3>
+            <p className="text-sm text-gray-400">
+              {WILDCARD_CATEGORIES[result.category].description}
+            </p>
+          </div>
+
+          <div className="bg-black/30 rounded-lg p-4 mb-4">
+            <div className="text-2xl font-bold text-white mb-2 text-center">
+              🏆 {result.winnerName}
+            </div>
+            <p className="text-gray-300 text-center">{result.description}</p>
+          </div>
+
+          <button
+            onClick={handleAwardPoint}
+            className="btn-primary w-full"
+          >
+            <Sparkles className="w-5 h-5 inline mr-2" />
+            Award +1 Wildcard Point
+          </button>
+        </div>
+      )}
+
+      {/* Wildcard History */}
+      {wildcardHistory.length > 0 && (
+        <div className="bg-primary-light/50 rounded-lg p-4">
+          <h3 className="font-semibold text-white mb-3">Recent Wildcard Winners</h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {wildcardHistory
+              .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              .slice(0, 10)
+              .map((record: any) => (
+                <div
+                  key={record.id}
+                  className="bg-primary-light rounded-lg p-3 flex items-center justify-between"
+                >
+                  <div>
+                    <div className="text-white font-semibold">
+                      {WILDCARD_CATEGORIES[record.category].emoji} {record.winnerName}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {record.date} - {WILDCARD_CATEGORIES[record.category].name}
+                    </div>
+                  </div>
+                  <div className="text-yellow-400 font-semibold">+1 pt</div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

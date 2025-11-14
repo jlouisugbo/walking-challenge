@@ -46,6 +46,7 @@ interface ChallengeContextType {
   updateParticipant: (id: string, updates: Partial<Participant>) => void;
   deleteParticipant: (id: string) => void;
   updateParticipantSteps: (id: string, steps: number) => void;
+  awardWildcardPoint: (participantId: string) => void;
   bulkUpdateFromPacer: (entries: PacerEntry[]) => UpdatePreview[];
   applyBulkUpdate: (previews: UpdatePreview[]) => void;
   updateConfig: (updates: Partial<ChallengeConfig>) => void;
@@ -59,10 +60,15 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [config, setConfig] = useState<ChallengeConfig>(loadConfig());
   const [lastSaved, setLastSaved] = useState<Date | null>(getLastSaved());
 
-  // Load data on mount
+  // Load data on mount and ensure points field exists
   useEffect(() => {
     const loaded = loadParticipants();
-    setParticipants(loaded);
+    // Ensure all participants have points field (default to 0)
+    const withPoints = loaded.map((p) => ({
+      ...p,
+      points: p.points ?? 0,
+    }));
+    setParticipants(withPoints);
   }, []);
 
   // Save participants whenever they change
@@ -101,6 +107,7 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         id: generateId(),
         name: name.trim(),
         totalSteps: steps,
+        points: 0,
         team,
         notes: '',
         createdAt: Date.now(),
@@ -137,6 +144,20 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           ? {
               ...p,
               totalSteps: steps,
+              lastUpdated: Date.now(),
+            }
+          : p
+      )
+    );
+  }, []);
+
+  const awardWildcardPoint = useCallback((participantId: string) => {
+    setParticipants((prev) =>
+      prev.map((p) =>
+        p.id === participantId
+          ? {
+              ...p,
+              points: (p.points || 0) + 1,
               lastUpdated: Date.now(),
             }
           : p
@@ -191,6 +212,7 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             id: generateId(),
             name: preview.name,
             totalSteps: preview.newSteps,
+            points: 0,
             team: null,
             notes: '',
             createdAt: now,
@@ -239,6 +261,7 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateParticipant,
     deleteParticipant,
     updateParticipantSteps,
+    awardWildcardPoint,
     bulkUpdateFromPacer,
     applyBulkUpdate,
     updateConfig,
