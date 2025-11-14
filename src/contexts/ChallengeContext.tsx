@@ -68,17 +68,22 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Load initial data from Supabase
   const loadData = useCallback(async () => {
+    console.log('📊 Loading challenge data from Supabase...');
     setLoading(true);
     try {
       const [participantsData, configData] = await Promise.all([
         loadParticipants(),
         loadConfig(),
       ]);
+      console.log('✅ Data loaded:', {
+        participants: participantsData.length,
+        config: configData
+      });
       setParticipants(participantsData);
       setConfig(configData);
       setLastSaved(getLastSaved());
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('❌ Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -91,10 +96,20 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Run automation checks after data is loaded
   useEffect(() => {
-    if (!config || participants.length === 0 || loading) return;
+    if (!config || loading) return;
 
     // Run automation checks (wildcard and team formation)
-    runAutomationChecks(participants, config);
+    // Don't wait for participants - automation handles empty arrays
+    const runChecks = async () => {
+      try {
+        await runAutomationChecks(participants, config);
+      } catch (error) {
+        console.error('Automation check error (non-fatal):', error);
+        // Don't crash the app if automation fails
+      }
+    };
+
+    runChecks();
   }, [participants, config, loading]);
 
   // Refresh data from database
@@ -261,6 +276,20 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     refreshData,
     resetChallenge,
   };
+
+  // Show loading screen while initial data loads
+  if (loading && !config) {
+    return (
+      <ChallengeContext.Provider value={value}>
+        <div className="min-h-screen bg-gradient-to-br from-primary via-primary-light to-primary flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent mx-auto mb-4"></div>
+            <p className="text-white text-xl">Loading Step Challenge...</p>
+          </div>
+        </div>
+      </ChallengeContext.Provider>
+    );
+  }
 
   return <ChallengeContext.Provider value={value}>{children}</ChallengeContext.Provider>;
 };
