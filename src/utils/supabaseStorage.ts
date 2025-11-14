@@ -60,6 +60,7 @@ export const saveParticipants = async (_participants: Participant[]): Promise<vo
 
 export const addParticipant = async (name: string, steps: number = 0, team: string | null = null): Promise<Participant | null> => {
   try {
+    console.log('💾 Adding participant to Supabase:', { name, steps, team });
     const { data, error } = await supabaseAdmin
       .from('participants')
       .insert({
@@ -72,8 +73,12 @@ export const addParticipant = async (name: string, steps: number = 0, team: stri
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Supabase error adding participant:', error);
+      throw error;
+    }
 
+    console.log('✅ Participant added successfully:', data);
     return {
       id: data.id,
       name: data.name,
@@ -85,13 +90,15 @@ export const addParticipant = async (name: string, steps: number = 0, team: stri
       lastUpdated: new Date(data.updated_at).getTime(),
     };
   } catch (error) {
-    console.error('Error adding participant:', error);
+    console.error('❌ Fatal error adding participant:', error);
+    alert(`Failed to add participant: ${error instanceof Error ? error.message : 'Unknown error'}\n\nMake sure you've run the SQL setup script in Supabase!`);
     return null;
   }
 };
 
 export const updateParticipant = async (id: string, updates: Partial<Participant>): Promise<void> => {
   try {
+    console.log('💾 Updating participant in Supabase:', { id, updates });
     const dbUpdates: any = {};
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.totalSteps !== undefined) dbUpdates.total_steps = updates.totalSteps;
@@ -104,9 +111,15 @@ export const updateParticipant = async (id: string, updates: Partial<Participant
       .update(dbUpdates)
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Supabase error updating participant:', error);
+      throw error;
+    }
+
+    console.log('✅ Participant updated successfully');
   } catch (error) {
-    console.error('Error updating participant:', error);
+    console.error('❌ Fatal error updating participant:', error);
+    alert(`Failed to update participant: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
 

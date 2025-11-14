@@ -8,6 +8,7 @@ import { Teams } from './pages/Teams';
 import { HeatWeek } from './pages/HeatWeek';
 import { Statistics } from './pages/Statistics';
 import { Admin } from './pages/Admin';
+import { WelcomeModal } from './components/ui/WelcomeModal';
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
           </Routes>
         </Layout>
       </Router>
+      {/* Welcome Modal - shows rules on first visit */}
+      <WelcomeModal />
       {/* Toast Notifications */}
       <Toaster
         position="top-right"
