@@ -35,9 +35,35 @@ A modern, feature-rich web application for managing a 30-day step challenge comp
 - Timeline of Heat Week progress
 - Captain badges and highlights
 
-### ⚙️ Admin Panel
+### 📈 Statistics & Analytics (NEW!)
+- Compare up to 5 participants side-by-side
+- Interactive line charts showing step history
+- Top 10 rankings by steps and progress
+- Color-coded participant comparison
+- Daily average calculations
+- Trend visualization with Recharts
 
-#### Quick Sync Tab
+### ⚙️ Admin Panel (Password Protected)
+
+**🔐 Admin Access:** Password-protected with 24-hour session (password: `E$horeme11`)
+
+#### CSV Import Tab (NEW!)
+- **Paste CSV data** in format: `Name, Steps`
+- Handles periods AND commas in numbers (e.g., "57.323" or "57,323")
+- Intelligent number parsing
+- Preview changes before applying
+- Load sample data button
+- Perfect for quick daily updates
+
+#### Historical Data Import Tab (NEW!)
+- Import backdated daily step data
+- Format: Date → Name,Steps entries
+- Supports YYYY-MM-DD or MM/DD/YYYY
+- Import multiple days at once
+- Track daily progress over time
+- Essential for mid-challenge setup
+
+#### Pacer Paste Tab
 - **Paste Pacer leaderboard** directly from the app
 - Intelligent parsing of name, steps, rank format
 - Preview changes before applying
@@ -60,7 +86,7 @@ A modern, feature-rich web application for managing a 30-day step challenge comp
 #### Settings Tab
 - Configure challenge dates
 - Set goal steps (default: 300,000)
-- Customize prize amounts
+- Customize prize amounts ($10/member team bonus)
 - Adjust milestones
 
 #### Data Management Tab
@@ -73,13 +99,14 @@ A modern, feature-rich web application for managing a 30-day step challenge comp
 
 ### Week 1: Heat Week (Nov 10-17)
 - Individual competition
-- Top 5 become team captains
+- Top 5 earn team captain titles
 - Intense personal competition
 
 ### Weeks 2-4: Team Competition
-- Teams of 3 members
+- Teams of 3 members randomly assigned
+- Team formation: Monday, Nov 18 @ 12:00 AM EST
 - Combined step totals
-- Team bonus prize for winners
+- Top 5 from Heat Week designated as captains
 
 ### Milestones & Raffle System
 - **150,000 steps** → 1 raffle ticket ⭐
@@ -90,7 +117,7 @@ A modern, feature-rich web application for managing a 30-day step challenge comp
 - 🥇 1st Place: $40
 - 🥈 2nd Place: $25
 - 🥉 3rd Place: $15
-- 🏆 Team Bonus: $50 (split among winning team)
+- 🏆 Team Bonus: $10 per team member (e.g., $30 for team of 3)
 
 ## 🚀 Quick Start
 
@@ -126,34 +153,53 @@ The built files will be in the `dist/` directory.
 
 ### Initial Setup
 
-1. **Navigate to Admin Panel**
-   - Click "Admin" in the bottom navigation (mobile) or top navigation (desktop)
+1. **Access Admin Panel**
+   - Click "Admin" in navigation
+   - Enter password: `E$horeme11`
+   - Access granted for 24 hours
 
-2. **Add Participants**
-   - Use "Quick Sync" tab to paste Pacer leaderboard
-   - Or use "Manual Entry" to add one by one
+2. **Import Participants** (Choose one method)
 
-3. **Assign Teams** (after Heat Week)
+   **Option A: CSV Import (Recommended for bulk)**
+   - Go to "CSV Import" tab
+   - Paste data in format: `Name, Steps`
+   - Handles: `Nadia, 57.323` or `Nadia,57,323`
+   - Click "Parse & Preview" → "Apply Updates"
+
+   **Option B: Pacer Paste**
+   - Go to "Pacer Paste" tab
+   - Copy/paste Pacer format (Name/Steps/Rank)
+   - Click "Parse & Preview" → "Apply Updates"
+
+   **Option C: Manual Entry**
+   - Add participants one by one
+   - Quick increment buttons available
+
+3. **Import Historical Data** (If starting mid-challenge)
+   - Go to "Historical Data" tab
+   - Import previous days' step counts
+   - Format: Date, then Name,Steps entries
+   - Enables trend analysis and charts
+
+4. **Assign Teams** (After Heat Week ends Nov 17)
    - Go to "Team Assignment" tab
-   - Select team for each participant
+   - Or manually assign via dropdown
 
-### Daily Updates
+### Daily Updates (EASIEST Method)
 
-1. **Copy leaderboard from Pacer app**
-   - Open Pacer leaderboard
-   - Copy all participant data
+**Using CSV Import:**
+```
+1. Export/copy today's steps as CSV: Name, Steps
+2. Go to Admin → CSV Import
+3. Paste → Parse & Preview → Apply
+4. Done! (under 30 seconds)
+```
 
-2. **Paste in Admin → Quick Sync**
-   - Paste the text
-   - Click "Parse & Preview"
-   - Review changes
-   - Click "Confirm & Apply Updates"
-
-3. **Done!**
-   - All pages update automatically
-   - Rankings recalculate
-   - Milestones check
-   - Raffle tickets update
+**All pages auto-update:**
+- Rankings recalculate
+- Milestones check
+- Raffle tickets update
+- Charts refresh
 
 ### Pacer Format Example
 
