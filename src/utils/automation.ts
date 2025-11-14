@@ -8,7 +8,6 @@ import type { Participant } from '../types';
 import {
   getRandomWildcardCategory,
   calculateWildcardWinner,
-  isAfterHeatWeek,
 } from './wildcardSystem';
 import { saveWildcardResult, getWildcardResults, awardWildcardPoint } from './supabaseStorage';
 
@@ -17,53 +16,73 @@ import { saveWildcardResult, getWildcardResults, awardWildcardPoint } from './su
 // ============================================
 
 /**
- * Check if wildcard needs to be run for yesterday
- * If yes, automatically select a random category and award the point
+ * Check for ALL missing wildcards and backfill them
+ * This ensures we never miss a wildcard even if nobody visits for several days
  */
 export const checkAndRunAutomatedWildcard = async (participants: Participant[]): Promise<void> => {
   try {
-    // Get yesterday's date
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-    // Check if wildcard is active (after Heat Week)
-    if (!isAfterHeatWeek(yesterday)) {
-      console.log('Wildcard not active yet (before Heat Week)');
-      return;
-    }
-
-    // Check if wildcard already exists for yesterday
+    // Get all existing wildcard results
     const existingResults = await getWildcardResults();
-    const yesterdayResult = existingResults.find(r => r.date === yesterdayStr);
+    const existingDates = new Set(existingResults.map(r => r.date));
 
-    if (yesterdayResult) {
-      console.log(`Wildcard already exists for ${yesterdayStr}`);
+    // Find all dates that should have a wildcard
+    const heatWeekEnd = new Date('2025-11-17T23:59:59');
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Only process up to yesterday (not today)
+    if (yesterday <= heatWeekEnd) {
+      console.log('Wildcard not active yet (Heat Week not over)');
       return;
     }
 
-    // No wildcard for yesterday - run it now!
-    console.log(`Running automated wildcard for ${yesterdayStr}`);
+    // Find all missing dates between Heat Week end and yesterday
+    const missingDates: string[] = [];
+    const currentDate = new Date(heatWeekEnd);
+    currentDate.setDate(currentDate.getDate() + 1); // Start day after Heat Week
 
-    // Select random category
-    const category = getRandomWildcardCategory();
-    console.log(`Selected category: ${category}`);
+    while (currentDate <= yesterday) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      if (!existingDates.has(dateStr)) {
+        missingDates.push(dateStr);
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
 
-    // Calculate winner
-    const winner = calculateWildcardWinner(category, participants, yesterdayStr);
-
-    if (!winner) {
-      console.log('No valid winner could be calculated');
+    if (missingDates.length === 0) {
+      console.log('All wildcards up to date!');
       return;
     }
 
-    // Save the result
-    await saveWildcardResult(winner);
+    console.log(`Found ${missingDates.length} missing wildcard(s). Backfilling...`);
 
-    // Award the point
-    await awardWildcardPoint(winner.winnerId);
+    // Process each missing date
+    for (const dateStr of missingDates) {
+      console.log(`Running automated wildcard for ${dateStr}`);
 
-    console.log(`✨ Automated wildcard completed! Winner: ${winner.winnerName}`);
+      // Select random category
+      const category = getRandomWildcardCategory();
+      console.log(`  Category: ${category}`);
+
+      // Calculate winner
+      const winner = calculateWildcardWinner(category, participants, dateStr);
+
+      if (!winner) {
+        console.log(`  No valid winner for ${dateStr}`);
+        continue;
+      }
+
+      // Save the result
+      await saveWildcardResult(winner);
+
+      // Award the point
+      await awardWildcardPoint(winner.winnerId);
+
+      console.log(`  ✨ Winner: ${winner.winnerName}`);
+    }
+
+    console.log(`✅ Backfilled ${missingDates.length} wildcard(s)!`);
   } catch (error) {
     console.error('Error in automated wildcard:', error);
   }
@@ -82,11 +101,11 @@ export const checkAndRunAutomatedTeamFormation = async (
   config: any
 ): Promise<boolean> => {
   try {
-    // Check if we're after Heat Week (Nov 18, 2025)
+    // Check if we're after Heat Week ends (midnight Nov 17 -> Nov 18 00:00:00)
     const heatWeekEnd = new Date('2025-11-18T00:00:00');
     const now = new Date();
 
-    if (now <= heatWeekEnd) {
+    if (now < heatWeekEnd) {
       console.log('Still in Heat Week - teams not formed yet');
       return false;
     }
