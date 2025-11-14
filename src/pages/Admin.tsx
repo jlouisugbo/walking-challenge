@@ -9,20 +9,24 @@ import {
   Plus,
   Save,
   AlertTriangle,
+  Calendar,
 } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { parsePacerLeaderboardFlexible } from '../utils/pacerParser';
+import { parseCSV, parseHistoricalCSV, generateSampleCSV, generateSampleHistoricalCSV } from '../utils/csvParser';
 import { downloadBackup, importData } from '../utils/storage';
 import { formatNumber } from '../utils/calculations';
 import type { UpdatePreview } from '../types';
+import { AdminProtected } from '../components/common/AdminProtected';
 
-type Tab = 'paste' | 'manual' | 'teams' | 'settings' | 'data';
+type Tab = 'paste' | 'csv' | 'historical' | 'manual' | 'teams' | 'settings' | 'data';
 
 export const Admin: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('paste');
+  const [activeTab, setActiveTab] = useState<Tab>('csv');
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <AdminProtected>
+      <div className="space-y-6 animate-slide-up">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-white flex items-center gap-3">
@@ -36,10 +40,22 @@ export const Admin: React.FC = () => {
       <div className="glass-card p-2">
         <div className="flex flex-wrap gap-2">
           <TabButton
+            active={activeTab === 'csv'}
+            onClick={() => setActiveTab('csv')}
+            icon={Upload}
+            label="CSV Import"
+          />
+          <TabButton
+            active={activeTab === 'historical'}
+            onClick={() => setActiveTab('historical')}
+            icon={Calendar}
+            label="Historical Data"
+          />
+          <TabButton
             active={activeTab === 'paste'}
             onClick={() => setActiveTab('paste')}
             icon={Upload}
-            label="Quick Sync"
+            label="Pacer Paste"
           />
           <TabButton
             active={activeTab === 'manual'}
@@ -51,7 +67,7 @@ export const Admin: React.FC = () => {
             active={activeTab === 'teams'}
             onClick={() => setActiveTab('teams')}
             icon={UsersIcon}
-            label="Team Assignment"
+            label="Teams"
           />
           <TabButton
             active={activeTab === 'settings'}
@@ -63,13 +79,15 @@ export const Admin: React.FC = () => {
             active={activeTab === 'data'}
             onClick={() => setActiveTab('data')}
             icon={Download}
-            label="Data Management"
+            label="Data"
           />
         </div>
       </div>
 
       {/* Tab Content */}
       <div className="min-h-[400px]">
+        {activeTab === 'csv' && <CSVTab />}
+        {activeTab === 'historical' && <HistoricalTab />}
         {activeTab === 'paste' && <PasteTab />}
         {activeTab === 'manual' && <ManualTab />}
         {activeTab === 'teams' && <TeamsTab />}
@@ -77,6 +95,7 @@ export const Admin: React.FC = () => {
         {activeTab === 'data' && <DataTab />}
       </div>
     </div>
+    </AdminProtected>
   );
 };
 
@@ -98,6 +117,343 @@ const TabButton: React.FC<{
       <Icon className="w-5 h-5" />
       <span className="hidden md:inline">{label}</span>
     </button>
+  );
+};
+
+const CSVTab: React.FC = () => {
+  const { bulkUpdateFromPacer, applyBulkUpdate } = useChallenge();
+  const [csvText, setCsvText] = useState('');
+  const [preview, setPreview] = useState<UpdatePreview[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleParse = () => {
+    setError(null);
+    const result = parseCSV(csvText);
+
+    if (!result.success || result.entries.length === 0) {
+      setError(result.errors.join('\n') || 'Failed to parse. Check the format.');
+      setPreview(null);
+      return;
+    }
+
+    // Convert CSV entries to Pacer entries format
+    const pacerEntries = result.entries.map((entry, index) => ({
+      name: entry.name,
+      steps: entry.steps,
+      rank: index + 1,
+    }));
+
+    const previews = bulkUpdateFromPacer(pacerEntries);
+    setPreview(previews);
+  };
+
+  const handleApply = () => {
+    if (preview) {
+      applyBulkUpdate(preview);
+      setCsvText('');
+      setPreview(null);
+      setError(null);
+      alert('✅ Updates applied successfully!');
+    }
+  };
+
+  const handleLoadSample = () => {
+    setCsvText(generateSampleCSV());
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="glass-card p-6">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Upload className="w-6 h-6 text-accent" />
+          📊 CSV Import
+        </h2>
+
+        <p className="text-sm text-gray-400 mb-4">
+          Paste CSV data in the format: <code className="text-accent">Name, Steps</code>
+          <br />
+          Supports periods and commas in numbers (e.g., "57.323" or "57,323")
+        </p>
+
+        <div className="flex gap-2 mb-4">
+          <button onClick={handleLoadSample} className="btn-secondary text-sm">
+            Load Sample
+          </button>
+        </div>
+
+        <textarea
+          value={csvText}
+          onChange={(e) => setCsvText(e.target.value)}
+          placeholder="Nadia, 57449&#10;Joel, 55709&#10;Shreya, 50499&#10;..."
+          className="w-full h-64 px-4 py-3 bg-primary-light rounded-lg border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent font-mono text-sm resize-none"
+        />
+
+        <div className="flex gap-3 mt-4">
+          <button onClick={handleParse} className="btn-primary">
+            Parse & Preview
+          </button>
+          <button
+            onClick={() => {
+              setCsvText('');
+              setPreview(null);
+              setError(null);
+            }}
+            className="btn-secondary"
+          >
+            Clear
+          </button>
+        </div>
+
+        {error && (
+          <div className="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-semibold text-red-400">Parse Error</div>
+                <div className="text-sm text-red-300 whitespace-pre-wrap mt-1">{error}</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Preview - Same as PasteTab */}
+      {preview && preview.length > 0 && (
+        <div className="glass-card p-6">
+          <h3 className="text-xl font-bold text-white mb-4">Preview Changes</h3>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left py-2 px-3 text-gray-400 font-semibold">Name</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-semibold">Old Steps</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-semibold">New Steps</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-semibold">Change</th>
+                  <th className="text-center py-2 px-3 text-gray-400 font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {preview.map((item, index) => (
+                  <tr key={index} className="border-b border-white/5 hover:bg-white/5">
+                    <td className="py-2 px-3 text-white font-medium">{item.name}</td>
+                    <td className="py-2 px-3 text-right text-gray-400 stat-number">
+                      {formatNumber(item.oldSteps)}
+                    </td>
+                    <td className="py-2 px-3 text-right text-accent stat-number">
+                      {formatNumber(item.newSteps)}
+                    </td>
+                    <td
+                      className={`py-2 px-3 text-right font-semibold stat-number ${
+                        item.change > 0
+                          ? 'text-green-400'
+                          : item.change < 0
+                          ? 'text-red-400'
+                          : 'text-gray-400'
+                      }`}
+                    >
+                      {item.change > 0 ? '+' : ''}
+                      {formatNumber(item.change)}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {item.status === 'new' && (
+                        <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs font-semibold">
+                          🆕 New
+                        </span>
+                      )}
+                      {item.status === 'update' && (
+                        <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full text-xs font-semibold">
+                          ✅ Update
+                        </span>
+                      )}
+                      {item.status === 'unchanged' && (
+                        <span className="bg-gray-500/20 text-gray-400 px-2 py-1 rounded-full text-xs font-semibold">
+                          ➖ Same
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button onClick={handleApply} className="btn-primary">
+              <Save className="w-5 h-5 inline mr-2" />
+              Confirm & Apply Updates
+            </button>
+            <button onClick={() => setPreview(null)} className="btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const HistoricalTab: React.FC = () => {
+  const { participants, addParticipant, updateParticipant } = useChallenge();
+  const [historicalText, setHistoricalText] = useState('');
+  const [parsedData, setParsedData] = useState<any[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleParse = () => {
+    setError(null);
+    const imports = parseHistoricalCSV(historicalText);
+
+    if (imports.length === 0) {
+      setError('No valid data found. Check the format.');
+      setParsedData(null);
+      return;
+    }
+
+    setParsedData(imports);
+  };
+
+  const handleApply = () => {
+    if (!parsedData) return;
+
+    parsedData.forEach((dayData) => {
+      const date = dayData.date;
+
+      dayData.entries.forEach((entry: any) => {
+        const existing = participants.find((p) => p.name.toLowerCase() === entry.name.toLowerCase());
+
+        if (existing) {
+          // Update existing participant with daily history
+          const dailyHistory = existing.dailyHistory || [];
+          const existingDay = dailyHistory.find((d) => d.date === date);
+
+          if (!existingDay) {
+            dailyHistory.push({
+              date,
+              steps: entry.steps,
+              timestamp: new Date(date).getTime(),
+            });
+          }
+
+          // Sort by date
+          dailyHistory.sort((a, b) => a.timestamp - b.timestamp);
+
+          updateParticipant(existing.id, {
+            dailyHistory,
+            totalSteps: entry.steps, // Update to latest total
+          });
+        } else {
+          // Add new participant
+          addParticipant(entry.name, entry.steps, null);
+        }
+      });
+    });
+
+    alert(`✅ Imported ${parsedData.length} day(s) of historical data!`);
+    setHistoricalText('');
+    setParsedData(null);
+  };
+
+  const handleLoadSample = () => {
+    setHistoricalText(generateSampleHistoricalCSV());
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="glass-card p-6">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Calendar className="w-6 h-6 text-accent" />
+          📅 Historical Data Import
+        </h2>
+
+        <p className="text-sm text-gray-400 mb-4">
+          Import daily step data for previous days. Format:
+          <br />
+          <code className="text-accent">YYYY-MM-DD</code> (or MM/DD/YYYY)
+          <br />
+          <code className="text-accent">Name, Steps</code>
+          <br />
+          <code className="text-accent">Name2, Steps</code>
+          <br />
+          (blank line, then next date)
+        </p>
+
+        <div className="flex gap-2 mb-4">
+          <button onClick={handleLoadSample} className="btn-secondary text-sm">
+            Load Sample
+          </button>
+        </div>
+
+        <textarea
+          value={historicalText}
+          onChange={(e) => setHistoricalText(e.target.value)}
+          placeholder="2025-11-10&#10;Nadia, 8234&#10;Joel, 7892&#10;&#10;2025-11-11&#10;Nadia, 15678&#10;Joel, 14234"
+          className="w-full h-80 px-4 py-3 bg-primary-light rounded-lg border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent font-mono text-sm resize-none"
+        />
+
+        <div className="flex gap-3 mt-4">
+          <button onClick={handleParse} className="btn-primary">
+            Parse & Preview
+          </button>
+          <button
+            onClick={() => {
+              setHistoricalText('');
+              setParsedData(null);
+              setError(null);
+            }}
+            className="btn-secondary"
+          >
+            Clear
+          </button>
+        </div>
+
+        {error && (
+          <div className="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-semibold text-red-400">Parse Error</div>
+                <div className="text-sm text-red-300 whitespace-pre-wrap mt-1">{error}</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Preview */}
+      {parsedData && parsedData.length > 0 && (
+        <div className="glass-card p-6">
+          <h3 className="text-xl font-bold text-white mb-4">
+            Preview: {parsedData.length} Day(s) of Data
+          </h3>
+
+          <div className="space-y-4">
+            {parsedData.map((dayData, index) => (
+              <div key={index} className="bg-primary-light/50 rounded-lg p-4">
+                <div className="font-semibold text-accent mb-2">📅 {dayData.date}</div>
+                <div className="text-sm space-y-1">
+                  {dayData.entries.map((entry: any, i: number) => (
+                    <div key={i} className="flex justify-between">
+                      <span className="text-gray-400">{entry.name}</span>
+                      <span className="text-white stat-number">{formatNumber(entry.steps)} steps</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button onClick={handleApply} className="btn-primary">
+              <Save className="w-5 h-5 inline mr-2" />
+              Import Historical Data
+            </button>
+            <button onClick={() => setParsedData(null)} className="btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -566,14 +922,14 @@ const SettingsTab: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Team Bonus ($)</label>
+            <label className="block text-sm text-gray-400 mb-2">Team Bonus ($ per member)</label>
             <input
               type="number"
-              value={localConfig.prizes.teamBonus}
+              value={localConfig.prizes.teamBonusPerMember}
               onChange={(e) =>
                 setLocalConfig({
                   ...localConfig,
-                  prizes: { ...localConfig.prizes, teamBonus: parseInt(e.target.value) },
+                  prizes: { ...localConfig.prizes, teamBonusPerMember: parseInt(e.target.value) },
                 })
               }
               className="w-full px-4 py-2 bg-primary-light rounded-lg border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent"

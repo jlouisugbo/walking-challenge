@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Leaderboard } from './pages/Leaderboard';
 import { Teams } from './pages/Teams';
 import { HeatWeek } from './pages/HeatWeek';
+import { Statistics } from './pages/Statistics';
 import { Admin } from './pages/Admin';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/teams" element={<Teams />} />
             <Route path="/heat-week" element={<HeatWeek />} />
+            <Route path="/stats" element={<Statistics />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </Layout>

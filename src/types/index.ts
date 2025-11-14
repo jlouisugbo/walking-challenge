@@ -1,3 +1,9 @@
+export interface DailySteps {
+  date: string; // YYYY-MM-DD
+  steps: number;
+  timestamp: number;
+}
+
 export interface Participant {
   id: string;
   name: string;
@@ -6,6 +12,7 @@ export interface Participant {
   notes: string;
   createdAt: number;
   lastUpdated: number;
+  dailyHistory?: DailySteps[]; // Track steps each day
 }
 
 export interface Team {
@@ -23,6 +30,8 @@ export interface ParticipantWithRank extends Participant {
   raffleTickets: number;
   progressPercent: number;
   prize?: number;
+  dailyAverage?: number;
+  trend?: 'up' | 'down' | 'stable';
 }
 
 export interface MilestoneStatus {
@@ -40,7 +49,7 @@ export interface ChallengeConfig {
     first: number;
     second: number;
     third: number;
-    teamBonus: number;
+    teamBonusPerMember: number; // Changed from teamBonus to teamBonusPerMember
   };
   teamSize: number;
   heatWeekEnabled: boolean;
@@ -68,6 +77,22 @@ export interface UpdatePreview {
   participant?: Participant;
 }
 
+export interface CSVEntry {
+  name: string;
+  steps: number;
+}
+
+export interface CSVParseResult {
+  success: boolean;
+  entries: CSVEntry[];
+  errors: string[];
+}
+
+export interface HistoricalImport {
+  date: string;
+  entries: CSVEntry[];
+}
+
 export const DEFAULT_CONFIG: ChallengeConfig = {
   startDate: '2025-11-10',
   endDate: '2025-12-10',
@@ -77,7 +102,7 @@ export const DEFAULT_CONFIG: ChallengeConfig = {
     first: 40,
     second: 25,
     third: 15,
-    teamBonus: 50,
+    teamBonusPerMember: 10, // $10 per team member
   },
   teamSize: 3,
   heatWeekEnabled: true,
@@ -93,4 +118,10 @@ export interface LeaderboardFilters {
   milestoneFilter: 'all' | '150k' | '225k' | '300k';
   sortField: SortField;
   sortDirection: SortDirection;
+}
+
+export interface ComparisonParticipant {
+  id: string;
+  name: string;
+  color: string;
 }

@@ -49,28 +49,36 @@ export const HeatWeek: React.FC = () => {
       <div className="glass-card p-6">
         <div className="flex items-center gap-3 mb-4">
           <Crown className="w-7 h-7 text-yellow-400" />
-          <h2 className="text-2xl font-bold text-white">Captain Selection</h2>
+          <h2 className="text-2xl font-bold text-white">Team Formation</h2>
         </div>
         <div className="space-y-3">
           <p className="text-gray-300">
-            The top 5 performers during Heat Week will earn the honor of becoming{' '}
-            <span className="text-yellow-400 font-semibold">Team Captains</span>!
+            The top 5 performers during Heat Week will earn the{' '}
+            <span className="text-yellow-400 font-semibold">Team Captain</span> title!
           </p>
+          <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mt-4">
+            <div className="text-sm text-blue-300 font-semibold mb-2">📅 Monday, Nov 18 @ 12:00 AM EST</div>
+            <p className="text-sm text-gray-300">
+              Teams will be automatically and randomly generated based on Sunday night's rankings.
+              The top 5 will be designated as captains, and all participants will be randomly assigned
+              to create balanced teams of {config.teamSize} members each.
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div className="bg-primary-light/50 rounded-lg p-4">
-              <div className="text-sm text-gray-400 mb-2">📋 Captain Responsibilities:</div>
+              <div className="text-sm text-gray-400 mb-2">👑 What Captains Get:</div>
               <ul className="text-sm text-gray-300 space-y-1">
-                <li>• Lead your team to victory</li>
-                <li>• Motivate team members</li>
-                <li>• Set the pace for your squad</li>
+                <li>• Captain title and recognition</li>
+                <li>• Lead by example for your team</li>
+                <li>• Share in team bonus prize</li>
               </ul>
             </div>
             <div className="bg-primary-light/50 rounded-lg p-4">
-              <div className="text-sm text-gray-400 mb-2">🏆 Captain Benefits:</div>
+              <div className="text-sm text-gray-400 mb-2">🎲 Random Assignment:</div>
               <ul className="text-sm text-gray-300 space-y-1">
-                <li>• Pick your team members</li>
-                <li>• Share in team bonus prize</li>
-                <li>• Lead your squad to glory</li>
+                <li>• Fair and unbiased team creation</li>
+                <li>• Balanced competition</li>
+                <li>• Everyone has equal opportunity</li>
               </ul>
             </div>
           </div>

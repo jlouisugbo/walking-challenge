@@ -76,8 +76,8 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="glass-card p-6 text-center bg-gradient-to-br from-purple-500 to-indigo-600">
             <div className="text-4xl mb-2">🏆</div>
-            <div className="text-2xl font-bold text-white">${config.prizes.teamBonus}</div>
-            <div className="text-sm text-white/80 mt-1">Team Bonus</div>
+            <div className="text-2xl font-bold text-white">${config.prizes.teamBonusPerMember * config.teamSize}</div>
+            <div className="text-sm text-white/80 mt-1">Team Bonus (${config.prizes.teamBonusPerMember}/member)</div>
           </div>
         </div>
       </section>
