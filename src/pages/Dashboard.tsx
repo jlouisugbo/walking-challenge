@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Trophy, Users, Target, TrendingUp, Ticket, Footprints, Sparkles } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
@@ -7,6 +7,7 @@ import { StatsCard } from '../components/ui/StatsCard';
 import { ParticipantCard } from '../components/ui/ParticipantCard';
 import { formatNumber, calculateDaysElapsed, isHeatWeek } from '../utils/calculations';
 import { isAfterHeatWeek, getWildcardResults, WILDCARD_CATEGORIES } from '../utils/wildcardSystem';
+import type { WildcardResult } from '../types';
 
 export const Dashboard: React.FC = () => {
   const {
@@ -19,13 +20,14 @@ export const Dashboard: React.FC = () => {
     participants,
   } = useChallenge();
 
+  const [wildcardResults, setWildcardResults] = useState<WildcardResult[]>([]);
+
   const topThree = rankedParticipants.slice(0, 3);
   const daysElapsed = calculateDaysElapsed(config.startDate);
   const inHeatWeek = isHeatWeek(config.startDate);
 
   // Wildcard system
   const wildcardActive = isAfterHeatWeek();
-  const wildcardResults = getWildcardResults();
   const latestWildcard = wildcardResults.length > 0
     ? wildcardResults.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
     : null;
@@ -34,7 +36,16 @@ export const Dashboard: React.FC = () => {
     .sort((a, b) => b.points - a.points)
     .slice(0, 3);
 
-  // Show toast for yesterday's wildcard winner on mount
+  // Load wildcard results on mount
+  useEffect(() => {
+    const loadWildcardResults = async () => {
+      const results = await getWildcardResults();
+      setWildcardResults(results);
+    };
+    loadWildcardResults();
+  }, []);
+
+  // Show toast for yesterday's wildcard winner
   useEffect(() => {
     if (!wildcardActive || !latestWildcard) return;
 

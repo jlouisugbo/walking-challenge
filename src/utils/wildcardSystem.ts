@@ -321,31 +321,5 @@ export const isAfterHeatWeek = (date: Date = new Date()): boolean => {
   return date > heatWeekEnd;
 };
 
-// Storage keys
-export const WILDCARD_RESULTS_KEY = 'stepChallenge_wildcardResults';
-export const WILDCARD_LAST_RUN_KEY = 'stepChallenge_wildcardLastRun';
-
-// Get all wildcard results from storage
-export const getWildcardResults = (): WildcardResult[] => {
-  const stored = localStorage.getItem(WILDCARD_RESULTS_KEY);
-  return stored ? JSON.parse(stored) : [];
-};
-
-// Save wildcard result
-export const saveWildcardResult = (result: WildcardResult): void => {
-  const results = getWildcardResults();
-  // Remove any existing result for this date
-  const filtered = results.filter((r) => r.date !== result.date);
-  filtered.push(result);
-  localStorage.setItem(WILDCARD_RESULTS_KEY, JSON.stringify(filtered));
-};
-
-// Get last run date
-export const getLastWildcardRun = (): string | null => {
-  return localStorage.getItem(WILDCARD_LAST_RUN_KEY);
-};
-
-// Save last run date
-export const saveLastWildcardRun = (date: string): void => {
-  localStorage.setItem(WILDCARD_LAST_RUN_KEY, date);
-};
+// Re-export Supabase storage functions for wildcard results
+export { getWildcardResults, saveWildcardResult, getTodaysWildcard } from './supabaseStorage';

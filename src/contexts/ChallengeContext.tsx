@@ -9,18 +9,20 @@ import type {
 } from '../types';
 import {
   loadParticipants,
-  saveParticipants,
+  addParticipant as addParticipantDb,
+  updateParticipant as updateParticipantDb,
+  deleteParticipant as deleteParticipantDb,
+  awardWildcardPoint as awardWildcardPointDb,
   loadConfig,
   saveConfig,
   getLastSaved,
-} from '../utils/storage';
+} from '../utils/supabaseStorage';
 import {
   rankParticipants,
   calculateTeams,
   calculateMilestoneStats,
   calculateTotalSteps,
   calculateAverageSteps,
-  generateId,
 } from '../utils/calculations';
 
 interface ChallengeContextType {
@@ -30,6 +32,7 @@ interface ChallengeContextType {
   rankedParticipants: ParticipantWithRank[];
   teams: Team[];
   lastSaved: Date | null;
+  loading: boolean;
 
   // Computed values
   totalSteps: number;
@@ -42,14 +45,15 @@ interface ChallengeContextType {
   };
 
   // Actions
-  addParticipant: (name: string, steps?: number, team?: string | null) => void;
-  updateParticipant: (id: string, updates: Partial<Participant>) => void;
-  deleteParticipant: (id: string) => void;
-  updateParticipantSteps: (id: string, steps: number) => void;
-  awardWildcardPoint: (participantId: string) => void;
+  addParticipant: (name: string, steps?: number, team?: string | null) => Promise<void>;
+  updateParticipant: (id: string, updates: Partial<Participant>) => Promise<void>;
+  deleteParticipant: (id: string) => Promise<void>;
+  updateParticipantSteps: (id: string, steps: number) => Promise<void>;
+  awardWildcardPoint: (participantId: string) => Promise<void>;
   bulkUpdateFromPacer: (entries: PacerEntry[]) => UpdatePreview[];
-  applyBulkUpdate: (previews: UpdatePreview[]) => void;
-  updateConfig: (updates: Partial<ChallengeConfig>) => void;
+  applyBulkUpdate: (previews: UpdatePreview[]) => Promise<void>;
+  updateConfig: (updates: Partial<ChallengeConfig>) => Promise<void>;
+  refreshData: () => Promise<void>;
   resetChallenge: () => void;
 }
 
@@ -57,30 +61,41 @@ const ChallengeContext = createContext<ChallengeContextType | undefined>(undefin
 
 export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [config, setConfig] = useState<ChallengeConfig>(loadConfig());
-  const [lastSaved, setLastSaved] = useState<Date | null>(getLastSaved());
+  const [config, setConfig] = useState<ChallengeConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  // Load data on mount and ensure points field exists
-  useEffect(() => {
-    const loaded = loadParticipants();
-    // Ensure all participants have points field (default to 0)
-    const withPoints = loaded.map((p) => ({
-      ...p,
-      points: p.points ?? 0,
-    }));
-    setParticipants(withPoints);
+  // Load initial data from Supabase
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [participantsData, configData] = await Promise.all([
+        loadParticipants(),
+        loadConfig(),
+      ]);
+      setParticipants(participantsData);
+      setConfig(configData);
+      setLastSaved(getLastSaved());
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Save participants whenever they change
+  // Load data on mount
   useEffect(() => {
-    if (participants.length > 0 || lastSaved) {
-      saveParticipants(participants);
-      setLastSaved(new Date());
-    }
-  }, [participants]);
+    loadData();
+  }, [loadData]);
+
+  // Refresh data from database
+  const refreshData = useCallback(async () => {
+    await loadData();
+  }, [loadData]);
 
   // Computed values
   const rankedParticipants = useMemo(() => {
+    if (!config) return [];
     return rankParticipants(participants, config);
   }, [participants, config]);
 
@@ -102,68 +117,46 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Actions
   const addParticipant = useCallback(
-    (name: string, steps: number = 0, team: string | null = null) => {
-      const newParticipant: Participant = {
-        id: generateId(),
-        name: name.trim(),
-        totalSteps: steps,
-        points: 0,
-        team,
-        notes: '',
-        createdAt: Date.now(),
-        lastUpdated: Date.now(),
-      };
-
-      setParticipants((prev) => [...prev, newParticipant]);
+    async (name: string, steps: number = 0, team: string | null = null) => {
+      const newParticipant = await addParticipantDb(name, steps, team);
+      if (newParticipant) {
+        await refreshData();
+      }
     },
-    []
+    [refreshData]
   );
 
-  const updateParticipant = useCallback((id: string, updates: Partial<Participant>) => {
-    setParticipants((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              ...updates,
-              lastUpdated: Date.now(),
-            }
-          : p
-      )
-    );
-  }, []);
+  const updateParticipant = useCallback(
+    async (id: string, updates: Partial<Participant>) => {
+      await updateParticipantDb(id, updates);
+      await refreshData();
+    },
+    [refreshData]
+  );
 
-  const deleteParticipant = useCallback((id: string) => {
-    setParticipants((prev) => prev.filter((p) => p.id !== id));
-  }, []);
+  const deleteParticipant = useCallback(
+    async (id: string) => {
+      await deleteParticipantDb(id);
+      await refreshData();
+    },
+    [refreshData]
+  );
 
-  const updateParticipantSteps = useCallback((id: string, steps: number) => {
-    setParticipants((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? {
-              ...p,
-              totalSteps: steps,
-              lastUpdated: Date.now(),
-            }
-          : p
-      )
-    );
-  }, []);
+  const updateParticipantSteps = useCallback(
+    async (id: string, steps: number) => {
+      await updateParticipantDb(id, { totalSteps: steps });
+      await refreshData();
+    },
+    [refreshData]
+  );
 
-  const awardWildcardPoint = useCallback((participantId: string) => {
-    setParticipants((prev) =>
-      prev.map((p) =>
-        p.id === participantId
-          ? {
-              ...p,
-              points: (p.points || 0) + 1,
-              lastUpdated: Date.now(),
-            }
-          : p
-      )
-    );
-  }, []);
+  const awardWildcardPoint = useCallback(
+    async (participantId: string) => {
+      await awardWildcardPointDb(participantId);
+      await refreshData();
+    },
+    [refreshData]
+  );
 
   const bulkUpdateFromPacer = useCallback(
     (entries: PacerEntry[]): UpdatePreview[] => {
@@ -200,60 +193,51 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     [participants]
   );
 
-  const applyBulkUpdate = useCallback((previews: UpdatePreview[]) => {
-    setParticipants((prev) => {
-      const updated = [...prev];
-      const now = Date.now();
-
-      previews.forEach((preview) => {
+  const applyBulkUpdate = useCallback(
+    async (previews: UpdatePreview[]) => {
+      // Process all updates
+      const updates = previews.map(async (preview) => {
         if (preview.status === 'new') {
           // Add new participant
-          updated.push({
-            id: generateId(),
-            name: preview.name,
-            totalSteps: preview.newSteps,
-            points: 0,
-            team: null,
-            notes: '',
-            createdAt: now,
-            lastUpdated: now,
-          });
+          return addParticipantDb(preview.name, preview.newSteps, null);
         } else if (preview.status === 'update' && preview.participant) {
           // Update existing participant
-          const index = updated.findIndex((p) => p.id === preview.participant!.id);
-          if (index !== -1) {
-            updated[index] = {
-              ...updated[index],
-              totalSteps: preview.newSteps,
-              lastUpdated: now,
-            };
-          }
+          return updateParticipantDb(preview.participant.id, {
+            totalSteps: preview.newSteps,
+          });
         }
       });
 
-      return updated;
-    });
-  }, []);
+      await Promise.all(updates);
+      await refreshData();
+    },
+    [refreshData]
+  );
 
-  const updateConfig = useCallback((updates: Partial<ChallengeConfig>) => {
-    setConfig((prev) => {
-      const newConfig = { ...prev, ...updates };
-      saveConfig(newConfig);
-      return newConfig;
-    });
-  }, []);
+  const updateConfig = useCallback(
+    async (updates: Partial<ChallengeConfig>) => {
+      if (!config) return;
+      const newConfig = { ...config, ...updates };
+      await saveConfig(newConfig);
+      setConfig(newConfig);
+    },
+    [config]
+  );
 
   const resetChallenge = useCallback(() => {
     setParticipants([]);
     setLastSaved(null);
+    // Note: This doesn't delete from database, just clears local state
+    // You would need to manually delete from Supabase dashboard
   }, []);
 
   const value: ChallengeContextType = {
     participants,
-    config,
+    config: config || ({} as ChallengeConfig), // Fallback for initial render
     rankedParticipants,
     teams,
     lastSaved,
+    loading,
     totalSteps,
     averageSteps,
     milestoneStats,
@@ -265,6 +249,7 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     bulkUpdateFromPacer,
     applyBulkUpdate,
     updateConfig,
+    refreshData,
     resetChallenge,
   };
 

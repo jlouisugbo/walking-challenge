@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { X, Trophy, Users, Flame, Sparkles, Ticket } from 'lucide-react';
 
 interface ChallengeRulesCardProps {

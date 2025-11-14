@@ -52,7 +52,7 @@ export const loadParticipants = async (): Promise<Participant[]> => {
   }
 };
 
-export const saveParticipants = async (participants: Participant[]): Promise<void> => {
+export const saveParticipants = async (_participants: Participant[]): Promise<void> => {
   // This function is kept for compatibility but does nothing
   // Individual updates are handled by specific functions
   console.log('saveParticipants called - using individual update functions instead');
@@ -366,7 +366,7 @@ export const getLastSaved = (): Date | null => {
   return new Date();
 };
 
-export const downloadBackup = async (): Promise<void> => {
+export const exportDataFromSupabase = async (): Promise<string> => {
   try {
     const participants = await loadParticipants();
     const config = await loadConfig();
@@ -380,11 +380,21 @@ export const downloadBackup = async (): Promise<void> => {
       wildcardResults,
     };
 
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    return JSON.stringify(backup, null, 2);
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    throw error;
+  }
+};
+
+export const downloadBackup = async (): Promise<void> => {
+  try {
+    const data = await exportDataFromSupabase();
+    const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `step-challenge-backup-${Date.now()}.json`;
+    a.download = `step-challenge-backup-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -394,8 +404,75 @@ export const downloadBackup = async (): Promise<void> => {
   }
 };
 
-export const importData = async (file: File): Promise<void> => {
-  // Import functionality - would need careful implementation
-  console.log('Import not yet implemented for Supabase');
-  alert('Import functionality coming soon for Supabase version');
+export const importDataToSupabase = async (jsonString: string): Promise<boolean> => {
+  try {
+    const data = JSON.parse(jsonString);
+
+    // Import participants
+    if (data.participants && Array.isArray(data.participants)) {
+      for (const participant of data.participants) {
+        // Insert or update each participant
+        const { error } = await supabaseAdmin
+          .from('participants')
+          .upsert({
+            id: participant.id,
+            name: participant.name,
+            total_steps: participant.totalSteps,
+            team: participant.team,
+            wildcard_points: participant.wildcardPoints || 0,
+            created_at: participant.createdAt || new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+
+        if (error) {
+          console.error('Error importing participant:', error);
+          continue;
+        }
+
+        // Import daily history if present
+        if (participant.dailyHistory && Array.isArray(participant.dailyHistory)) {
+          for (const day of participant.dailyHistory) {
+            await supabaseAdmin
+              .from('daily_history')
+              .upsert({
+                participant_id: participant.id,
+                date: day.date,
+                steps: day.steps,
+              }, {
+                onConflict: 'participant_id,date'
+              });
+          }
+        }
+      }
+    }
+
+    // Import config
+    if (data.config) {
+      await saveConfig(data.config);
+    }
+
+    // Import wildcard results
+    if (data.wildcardResults && Array.isArray(data.wildcardResults)) {
+      for (const result of data.wildcardResults) {
+        await supabaseAdmin
+          .from('wildcard_results')
+          .upsert({
+            id: result.id,
+            date: result.date,
+            category: result.category,
+            winner_id: result.winnerId,
+            winner_name: result.winnerName,
+            value: result.value,
+            description: result.description,
+          }, {
+            onConflict: 'id'
+          });
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error importing data:', error);
+    return false;
+  }
 };

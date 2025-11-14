@@ -15,8 +15,8 @@ import {
 import { useChallenge } from '../contexts/ChallengeContext';
 import { parsePacerLeaderboardFlexible } from '../utils/pacerParser';
 import { parseCSV, parseHistoricalCSV, generateSampleCSV, generateSampleHistoricalCSV } from '../utils/csvParser';
-import { downloadBackup, importData } from '../utils/storage';
 import { formatNumber } from '../utils/calculations';
+import { exportDataFromSupabase, importDataToSupabase } from '../utils/supabaseStorage';
 import type { UpdatePreview } from '../types';
 import { AdminProtected } from '../components/common/AdminProtected';
 import {
@@ -328,45 +328,50 @@ const HistoricalTab: React.FC = () => {
     setParsedData(imports);
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!parsedData) return;
 
-    parsedData.forEach((dayData) => {
-      const date = dayData.date;
+    try {
+      for (const dayData of parsedData) {
+        const date = dayData.date;
 
-      dayData.entries.forEach((entry: any) => {
-        const existing = participants.find((p) => p.name.toLowerCase() === entry.name.toLowerCase());
+        for (const entry of dayData.entries) {
+          const existing = participants.find((p) => p.name.toLowerCase() === entry.name.toLowerCase());
 
-        if (existing) {
-          // Update existing participant with daily history
-          const dailyHistory = existing.dailyHistory || [];
-          const existingDay = dailyHistory.find((d) => d.date === date);
+          if (existing) {
+            // Update existing participant with daily history
+            const dailyHistory = existing.dailyHistory || [];
+            const existingDay = dailyHistory.find((d) => d.date === date);
 
-          if (!existingDay) {
-            dailyHistory.push({
-              date,
-              steps: entry.steps,
-              timestamp: new Date(date).getTime(),
+            if (!existingDay) {
+              dailyHistory.push({
+                date,
+                steps: entry.steps,
+                timestamp: new Date(date).getTime(),
+              });
+            }
+
+            // Sort by date
+            dailyHistory.sort((a, b) => a.timestamp - b.timestamp);
+
+            await updateParticipant(existing.id, {
+              dailyHistory,
+              totalSteps: entry.steps, // Update to latest total
             });
+          } else {
+            // Add new participant
+            await addParticipant(entry.name, entry.steps, null);
           }
-
-          // Sort by date
-          dailyHistory.sort((a, b) => a.timestamp - b.timestamp);
-
-          updateParticipant(existing.id, {
-            dailyHistory,
-            totalSteps: entry.steps, // Update to latest total
-          });
-        } else {
-          // Add new participant
-          addParticipant(entry.name, entry.steps, null);
         }
-      });
-    });
+      }
 
-    alert(`✅ Imported ${parsedData.length} day(s) of historical data!`);
-    setHistoricalText('');
-    setParsedData(null);
+      alert(`✅ Imported ${parsedData.length} day(s) of historical data!`);
+      setHistoricalText('');
+      setParsedData(null);
+    } catch (error) {
+      console.error('Error importing historical data:', error);
+      alert('❌ Failed to import historical data. Please try again.');
+    }
   };
 
   const handleLoadSample = () => {
@@ -963,30 +968,48 @@ const SettingsTab: React.FC = () => {
 };
 
 const DataTab: React.FC = () => {
-  const { resetChallenge } = useChallenge();
+  const { resetChallenge, refreshData } = useChallenge();
 
-  const handleExport = () => {
-    downloadBackup();
+  const handleExport = async () => {
+    try {
+      const data = await exportDataFromSupabase();
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `step-challenge-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      alert('✅ Backup downloaded successfully!');
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('❌ Failed to export data. Please try again.');
+    }
   };
 
   const handleImport = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
           try {
             const data = event.target?.result as string;
-            if (importData(data)) {
-              alert('✅ Data imported successfully! Refresh the page.');
+            const success = await importDataToSupabase(data);
+            if (success) {
+              alert('✅ Data imported successfully! Refreshing...');
+              await refreshData();
               window.location.reload();
             } else {
               alert('❌ Failed to import data. Check the file format.');
             }
           } catch (error) {
+            console.error('Import error:', error);
             alert('❌ Failed to import data. Invalid file.');
           }
         };
@@ -1072,9 +1095,18 @@ const WildcardTab: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [wildcardHistory, setWildcardHistory] = useState<any[]>([]);
 
-  const wildcardHistory = getWildcardResults();
   const isEnabled = isAfterHeatWeek(new Date(selectedDate));
+
+  // Load wildcard history on mount
+  React.useEffect(() => {
+    const loadHistory = async () => {
+      const history = await getWildcardResults();
+      setWildcardHistory(history);
+    };
+    loadHistory();
+  }, []);
 
   const handleCalculateWildcard = () => {
     if (!selectedCategory) {
@@ -1096,17 +1128,26 @@ const WildcardTab: React.FC = () => {
     setIsCalculating(false);
   };
 
-  const handleAwardPoint = () => {
+  const handleAwardPoint = async () => {
     if (!result) return;
 
-    // Award the point
-    awardWildcardPoint(result.winnerId);
+    try {
+      // Award the point
+      await awardWildcardPoint(result.winnerId);
 
-    // Save to wildcard history
-    saveWildcardResult(result);
+      // Save to wildcard history
+      await saveWildcardResult(result);
 
-    alert(`✨ Wildcard point awarded to ${result.winnerName}!`);
-    setResult(null);
+      // Refresh history
+      const history = await getWildcardResults();
+      setWildcardHistory(history);
+
+      alert(`✨ Wildcard point awarded to ${result.winnerName}!`);
+      setResult(null);
+    } catch (error) {
+      console.error('Error awarding wildcard point:', error);
+      alert('❌ Failed to award wildcard point. Please try again.');
+    }
   };
 
   const handleRandomCategory = () => {
