@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { Trophy, Users, Target, TrendingUp, Ticket, Footprints, Sparkles } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { CountdownTimer } from '../components/ui/CountdownTimer';
@@ -32,6 +33,29 @@ export const Dashboard: React.FC = () => {
     .filter((p) => p.points > 0)
     .sort((a, b) => b.points - a.points)
     .slice(0, 3);
+
+  // Show toast for yesterday's wildcard winner on mount
+  useEffect(() => {
+    if (!wildcardActive || !latestWildcard) return;
+
+    // Check if this wildcard is from yesterday
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    if (latestWildcard.date === yesterdayStr) {
+      // Check if we've already shown this toast
+      const shownKey = `wildcard_shown_${latestWildcard.date}`;
+      if (!localStorage.getItem(shownKey)) {
+        const categoryInfo = (WILDCARD_CATEGORIES as any)[latestWildcard.category];
+        toast.success(
+          `🎉 Yesterday's Wildcard Winner: ${latestWildcard.winnerName} won "${categoryInfo.emoji} ${categoryInfo.name}"!`,
+          { duration: 8000 }
+        );
+        localStorage.setItem(shownKey, 'true');
+      }
+    }
+  }, [wildcardActive, latestWildcard]);
 
   return (
     <div className="space-y-8 animate-slide-up">
