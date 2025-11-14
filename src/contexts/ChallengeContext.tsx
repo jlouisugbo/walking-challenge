@@ -24,6 +24,7 @@ import {
   calculateTotalSteps,
   calculateAverageSteps,
 } from '../utils/calculations';
+import { runAutomationChecks } from '../utils/automation';
 
 interface ChallengeContextType {
   // State
@@ -87,6 +88,14 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Run automation checks after data is loaded
+  useEffect(() => {
+    if (!config || participants.length === 0 || loading) return;
+
+    // Run automation checks (wildcard and team formation)
+    runAutomationChecks(participants, config);
+  }, [participants, config, loading]);
 
   // Refresh data from database
   const refreshData = useCallback(async () => {

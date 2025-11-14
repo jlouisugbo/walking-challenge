@@ -325,15 +325,29 @@ export const getWeeklyMilestones = async (weekStart: string): Promise<DbWeeklyMi
 
 export const loadConfig = async (): Promise<ChallengeConfig> => {
   try {
-    const { data, error } = await supabase
+    // Load main config
+    const { data: configData, error: configError } = await supabase
       .from('challenge_config')
       .select('value')
       .eq('key', 'main_config')
       .single();
 
-    if (error) throw error;
+    if (configError) throw configError;
 
-    return data?.value || DEFAULT_CONFIG;
+    const config = configData?.value || DEFAULT_CONFIG;
+
+    // Check if teams have been formed
+    const { data: teamsFormedData } = await supabase
+      .from('challenge_config')
+      .select('value')
+      .eq('key', 'teamsFormed')
+      .single();
+
+    // Add teamsFormed flag to config
+    return {
+      ...config,
+      teamsFormed: teamsFormedData?.value === 'true' || false,
+    };
   } catch (error) {
     console.error('Error loading config:', error);
     return DEFAULT_CONFIG;

@@ -56,6 +56,7 @@ export interface ChallengeConfig {
   teamSize: number;
   heatWeekEnabled: boolean;
   teamCompetitionEnabled: boolean;
+  teamsFormed?: boolean; // Automated team formation flag
 }
 
 export interface PacerEntry {
