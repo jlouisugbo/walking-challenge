@@ -31,7 +31,7 @@ export const WelcomeModal: React.FC = () => {
       {hasSeenWelcome && !showModal && (
         <button
           onClick={handleShowRules}
-          className="fixed bottom-6 right-6 bg-accent hover:bg-accent-dark text-white font-semibold px-4 py-3 rounded-lg shadow-lg transition-all z-40 flex items-center gap-2"
+          className="fixed bottom-20 md:bottom-6 right-6 bg-accent hover:bg-accent-dark text-white font-semibold px-4 py-3 rounded-lg shadow-lg transition-all z-40 flex items-center gap-2"
         >
           <span className="text-xl">📋</span>
           <span className="hidden md:inline">Challenge Rules</span>

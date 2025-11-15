@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Trophy, Users, Target, TrendingUp, Ticket, Footprints, Sparkles } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
@@ -85,9 +86,12 @@ export const Dashboard: React.FC = () => {
         {/* Challenge Status */}
         <div className="inline-block">
           {inHeatWeek ? (
-            <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-full font-bold text-lg animate-pulse">
+            <Link
+              to="/heat-week"
+              className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-full font-bold text-lg animate-pulse hover:from-orange-600 hover:to-red-600 transition-all cursor-pointer inline-block"
+            >
               🔥 HEAT WEEK - Individual Competition
-            </div>
+            </Link>
           ) : (
             <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full font-bold text-lg">
               👥 Team Competition Active

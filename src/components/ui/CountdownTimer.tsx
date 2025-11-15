@@ -23,7 +23,17 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ endDate, classNa
 
   useEffect(() => {
     const calculateTimeRemaining = () => {
-      const end = new Date(endDate).getTime();
+      // Parse the end date and set to midnight EST (UTC-5)
+      // Create a date at midnight in EST timezone
+      const endDateParts = endDate.split('-');
+      const year = parseInt(endDateParts[0]);
+      const month = parseInt(endDateParts[1]) - 1; // Month is 0-indexed
+      const day = parseInt(endDateParts[2]);
+
+      // Create date at midnight EST by using a specific time string
+      // "2025-12-10T23:59:59-05:00" means Dec 10 11:59:59 PM EST
+      const endDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T23:59:59-05:00`;
+      const end = new Date(endDateStr).getTime();
       const now = new Date().getTime();
       const diff = end - now;
 

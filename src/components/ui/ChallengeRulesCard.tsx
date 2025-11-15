@@ -10,7 +10,7 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-gradient-to-br from-primary via-primary-light to-primary max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-xl border-2 border-accent/50 shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-primary border-b border-white/10 p-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-primary border-b border-white/10 p-4 flex items-center justify-between z-10">
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
             📋 Challenge Rules & Prizes
           </h2>
@@ -176,7 +176,7 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gradient-primary border-t border-white/10 p-4">
+        <div className="sticky bottom-0 bg-primary border-t border-white/10 p-4 z-10">
           <button
             onClick={onClose}
             className="w-full btn-primary py-3"
