@@ -133,13 +133,13 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
                 <strong className="text-white">Weekly Target:</strong> 70,000 steps per week (10,000 steps/day)
               </p>
               <p className="text-gray-300 text-sm">
-                <strong className="text-white">Achievement Badge:</strong> Earn a special badge when you hit 70k in a week!
+                <strong className="text-white">Achievement Badge:</strong> Earn a special badge each week you hit 70k!
               </p>
               <p className="text-gray-300 text-sm">
-                <strong className="text-white">Weekly Raffle:</strong> Everyone who hits 70k in a week gets entered into a weekly raffle for additional prizes! 🎟️
+                <strong className="text-white">Raffle Entry:</strong> Hit 70k for 4 total weeks to earn +1 raffle ticket! 🎟️
               </p>
               <p className="text-gray-300 text-sm">
-                <strong className="text-white">Resets:</strong> Every Monday at 12:00 AM EST
+                <strong className="text-white">Week Resets:</strong> Every Monday at 12:00 AM EST
               </p>
             </div>
           </section>

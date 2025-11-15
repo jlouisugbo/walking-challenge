@@ -26,12 +26,12 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
   return (
     <div
-      className={`glass-card p-4 hover:scale-[1.02] transition-all duration-200 cursor-pointer ${
+      className={`glass-card px-4 py-2 hover:scale-[1.02] transition-all duration-200 cursor-pointer ${
         isTopThree ? rankColorClass : ''
       } ${className}`}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             {medal && <span className="text-3xl">{medal}</span>}
@@ -58,7 +58,7 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
       {!compact && (
         <>
-          <ProgressBar percent={participant.progressPercent} className="mb-3" />
+          <ProgressBar percent={participant.progressPercent} className="mb-2" />
 
           <div className="flex items-center justify-between">
             <MilestoneIndicator milestones={participant.milestones} size="sm" />

@@ -14,11 +14,14 @@ export const calculateMilestones = (steps: number): MilestoneStatus => {
 /**
  * Calculate number of raffle tickets earned
  */
-export const calculateRaffleTickets = (steps: number): number => {
+export const calculateRaffleTickets = (steps: number, weekly70kCount: number = 0): number => {
   let tickets = 0;
+  // Milestone-based tickets (cumulative total steps)
   if (steps >= 150000) tickets++;
   if (steps >= 225000) tickets++;
   if (steps >= 300000) tickets++;
+  // Weekly 70k raffle tickets (1 ticket per 4 weeks of hitting 70k)
+  tickets += Math.floor(weekly70kCount / 4);
   return tickets;
 };
 

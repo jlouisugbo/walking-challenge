@@ -24,6 +24,7 @@ import {
   calculateMilestoneStats,
   calculateTotalSteps,
   calculateAverageSteps,
+  calculateRaffleTickets,
 } from '../utils/calculations';
 import { runAutomationChecks } from '../utils/automation';
 
@@ -126,11 +127,16 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const rankedParticipants = useMemo(() => {
     if (!config) return [];
     const ranked = rankParticipants(participants, config);
-    // Add weekly70kCount to each participant
-    return ranked.map(p => ({
-      ...p,
-      weekly70kCount: weekly70kCounts.get(p.id) || 0
-    }));
+    // Add weekly70kCount and recalculate raffle tickets
+    return ranked.map(p => {
+      const weekly70kCount = weekly70kCounts.get(p.id) || 0;
+      const raffleTickets = calculateRaffleTickets(p.totalSteps, weekly70kCount);
+      return {
+        ...p,
+        weekly70kCount,
+        raffleTickets
+      };
+    });
   }, [participants, config, weekly70kCounts]);
 
   const teams = useMemo(() => {
