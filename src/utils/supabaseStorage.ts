@@ -332,6 +332,30 @@ export const getWeeklyMilestones = async (weekStart: string): Promise<DbWeeklyMi
   }
 };
 
+export const getWeekly70kCounts = async (): Promise<Map<string, number>> => {
+  try {
+    const { data, error } = await supabase
+      .from('weekly_milestones')
+      .select('participant_id, achieved_70k');
+
+    if (error) throw error;
+
+    // Count how many weeks each participant achieved 70k
+    const counts = new Map<string, number>();
+    data?.forEach((milestone) => {
+      if (milestone.achieved_70k) {
+        const currentCount = counts.get(milestone.participant_id) || 0;
+        counts.set(milestone.participant_id, currentCount + 1);
+      }
+    });
+
+    return counts;
+  } catch (error) {
+    console.error('Error loading weekly 70k counts:', error);
+    return new Map();
+  }
+};
+
 // ============================================
 // CONFIG OPERATIONS
 // ============================================

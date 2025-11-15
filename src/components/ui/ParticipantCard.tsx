@@ -71,6 +71,13 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
                 </div>
               )}
 
+              {participant.weekly70kCount && participant.weekly70kCount > 0 && (
+                <div className="flex items-center gap-1 text-green-400">
+                  <Trophy className="w-4 h-4" />
+                  <span className="font-semibold">{participant.weekly70kCount}x 70k Week{participant.weekly70kCount > 1 ? 's' : ''}</span>
+                </div>
+              )}
+
               {participant.raffleTickets > 0 && (
                 <div className="flex items-center gap-1 text-yellow-400">
                   <span>🎟️</span>

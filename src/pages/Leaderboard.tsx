@@ -9,6 +9,7 @@ export const Leaderboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [teamFilter, setTeamFilter] = useState<string>('all');
   const [milestoneFilter, setMilestoneFilter] = useState<string>('all');
+  const [pointsFilter, setPointsFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('rank');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -52,6 +53,20 @@ export const Leaderboard: React.FC = () => {
       });
     }
 
+    // Points filter
+    if (pointsFilter !== 'all') {
+      filtered = filtered.filter((p) => {
+        switch (pointsFilter) {
+          case 'has-points':
+            return p.points > 0;
+          case 'no-points':
+            return p.points === 0;
+          default:
+            return true;
+        }
+      });
+    }
+
     // Sorting
     filtered.sort((a, b) => {
       let compareValue = 0;
@@ -63,11 +78,8 @@ export const Leaderboard: React.FC = () => {
         case 'team':
           compareValue = (a.team || '').localeCompare(b.team || '');
           break;
-        case 'steps':
-          compareValue = a.totalSteps - b.totalSteps;
-          break;
-        case 'progress':
-          compareValue = a.progressPercent - b.progressPercent;
+        case 'points':
+          compareValue = a.points - b.points;
           break;
         case 'rank':
         default:
@@ -79,7 +91,7 @@ export const Leaderboard: React.FC = () => {
     });
 
     return filtered;
-  }, [rankedParticipants, searchTerm, teamFilter, milestoneFilter, sortField, sortDirection]);
+  }, [rankedParticipants, searchTerm, teamFilter, milestoneFilter, pointsFilter, sortField, sortDirection]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -123,7 +135,7 @@ export const Leaderboard: React.FC = () => {
         </div>
 
         {/* Filter Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Team Filter */}
           <div>
             <label className="block text-sm text-gray-400 mb-2">Filter by Team</label>
@@ -155,33 +167,29 @@ export const Leaderboard: React.FC = () => {
               <option value="300k">Reached 300k (Goal)</option>
             </select>
           </div>
+
+          {/* Wildcard Points Filter */}
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Wildcard Points</label>
+            <select
+              value={pointsFilter}
+              onChange={(e) => setPointsFilter(e.target.value)}
+              className="w-full px-4 py-2 bg-primary-light rounded-lg border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="all">All Participants</option>
+              <option value="has-points">Has Wildcard Points</option>
+              <option value="no-points">No Wildcard Points</option>
+            </select>
+          </div>
         </div>
 
         {/* Sort Controls */}
         <div className="flex flex-wrap gap-2">
           <SortButton
-            label="Rank"
-            active={sortField === 'rank'}
-            direction={sortDirection}
-            onClick={() => toggleSort('rank')}
-          />
-          <SortButton
             label="Name"
             active={sortField === 'name'}
             direction={sortDirection}
             onClick={() => toggleSort('name')}
-          />
-          <SortButton
-            label="Steps"
-            active={sortField === 'steps'}
-            direction={sortDirection}
-            onClick={() => toggleSort('steps')}
-          />
-          <SortButton
-            label="Progress"
-            active={sortField === 'progress'}
-            direction={sortDirection}
-            onClick={() => toggleSort('progress')}
           />
           {teams.length > 0 && (
             <SortButton
@@ -191,6 +199,15 @@ export const Leaderboard: React.FC = () => {
               onClick={() => toggleSort('team')}
             />
           )}
+          <SortButton
+            label="Wildcard Points"
+            active={sortField === 'points'}
+            direction={sortDirection}
+            onClick={() => toggleSort('points')}
+          />
+        </div>
+        <div className="text-xs text-gray-400 mt-2">
+          💡 By default, participants are sorted by rank (total steps)
         </div>
       </div>
 

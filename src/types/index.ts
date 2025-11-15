@@ -34,6 +34,7 @@ export interface ParticipantWithRank extends Participant {
   dailyAverage?: number;
   trend?: 'up' | 'down' | 'stable';
   pointsRank?: number; // Rank by points
+  weekly70kCount?: number; // Total number of weeks achieved 70k
 }
 
 export interface MilestoneStatus {
@@ -112,7 +113,7 @@ export const DEFAULT_CONFIG: ChallengeConfig = {
   teamCompetitionEnabled: true,
 };
 
-export type SortField = 'rank' | 'name' | 'team' | 'steps' | 'progress';
+export type SortField = 'rank' | 'name' | 'team' | 'points';
 export type SortDirection = 'asc' | 'desc';
 
 export interface LeaderboardFilters {

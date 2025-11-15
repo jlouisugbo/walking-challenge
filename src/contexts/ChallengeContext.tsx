@@ -16,6 +16,7 @@ import {
   loadConfig,
   saveConfig,
   getLastSaved,
+  getWeekly70kCounts,
 } from '../utils/supabaseStorage';
 import {
   rankParticipants,
@@ -65,22 +66,26 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [config, setConfig] = useState<ChallengeConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [weekly70kCounts, setWeekly70kCounts] = useState<Map<string, number>>(new Map());
 
   // Load initial data from Supabase
   const loadData = useCallback(async () => {
     console.log('📊 Loading challenge data from Supabase...');
     setLoading(true);
     try {
-      const [participantsData, configData] = await Promise.all([
+      const [participantsData, configData, weekly70kCountsData] = await Promise.all([
         loadParticipants(),
         loadConfig(),
+        getWeekly70kCounts(),
       ]);
       console.log('✅ Data loaded:', {
         participants: participantsData.length,
-        config: configData
+        config: configData,
+        weekly70kCounts: weekly70kCountsData.size
       });
       setParticipants(participantsData);
       setConfig(configData);
+      setWeekly70kCounts(weekly70kCountsData);
       setLastSaved(getLastSaved());
     } catch (error) {
       console.error('❌ Error loading data:', error);
@@ -120,8 +125,13 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Computed values
   const rankedParticipants = useMemo(() => {
     if (!config) return [];
-    return rankParticipants(participants, config);
-  }, [participants, config]);
+    const ranked = rankParticipants(participants, config);
+    // Add weekly70kCount to each participant
+    return ranked.map(p => ({
+      ...p,
+      weekly70kCount: weekly70kCounts.get(p.id) || 0
+    }));
+  }, [participants, config, weekly70kCounts]);
 
   const teams = useMemo(() => {
     return calculateTeams(rankedParticipants);
