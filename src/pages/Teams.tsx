@@ -88,6 +88,7 @@ export const Teams: React.FC = () => {
           <div className="text-sm text-yellow-400 font-semibold">
             💰 Prize: ${config.prizes.teamBonusPerMember * teams[0].members.length} Team Bonus (${config.prizes.teamBonusPerMember}/member)
           </div>
+          </div>
         </div>
       )}
 
