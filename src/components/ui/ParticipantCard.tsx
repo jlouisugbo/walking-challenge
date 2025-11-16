@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trophy, Sparkles } from 'lucide-react';
 import type { ParticipantWithRank } from '../../types';
-import { formatNumber, getRankMedal, getRankColor } from '../../utils/calculations';
+import { formatNumber, getRankMedal, getRankColor, stepsToMiles } from '../../utils/calculations';
 import { ProgressBar } from './ProgressBar';
 import { MilestoneIndicator } from './MilestoneIndicator';
 
@@ -52,7 +52,9 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
           <div className="text-2xl font-bold text-accent stat-number">
             {formatNumber(participant.totalSteps)}
           </div>
-          <div className="text-xs text-gray-400">steps</div>
+          <div className="text-xs text-gray-400">
+            steps • {stepsToMiles(participant.totalSteps).toFixed(1)} mi
+          </div>
         </div>
       </div>
 

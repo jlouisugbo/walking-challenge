@@ -19,7 +19,7 @@ import { useChallenge } from '../contexts/ChallengeContext';
 import { parsePacerLeaderboardFlexible } from '../utils/pacerParser';
 import { parseCSV, parseHistoricalCSV, generateSampleCSV, generateSampleHistoricalCSV } from '../utils/csvParser';
 import { formatNumber } from '../utils/calculations';
-import { exportDataFromSupabase, importDataToSupabase, loadTeamCustomizations, saveTeamCustomization } from '../utils/supabaseStorage';
+import { exportDataFromSupabase, importDataToSupabase, loadTeamCustomizations, saveTeamCustomization, saveDailyHistory } from '../utils/supabaseStorage';
 import type { UpdatePreview, TeamCustomization } from '../types';
 import { AdminProtected } from '../components/common/AdminProtected';
 import {
@@ -342,27 +342,15 @@ const HistoricalTab: React.FC = () => {
           const existing = participants.find((p) => p.name.toLowerCase() === entry.name.toLowerCase());
 
           if (existing) {
-            // Update existing participant with daily history
-            const dailyHistory = existing.dailyHistory || [];
-            const existingDay = dailyHistory.find((d) => d.date === date);
+            // Save daily history to database
+            await saveDailyHistory(existing.id, date, entry.steps);
 
-            if (!existingDay) {
-              dailyHistory.push({
-                date,
-                steps: entry.steps,
-                timestamp: new Date(date).getTime(),
-              });
-            }
-
-            // Sort by date
-            dailyHistory.sort((a, b) => a.timestamp - b.timestamp);
-
+            // Update total steps to the latest value
             await updateParticipant(existing.id, {
-              dailyHistory,
-              totalSteps: entry.steps, // Update to latest total
+              totalSteps: entry.steps,
             });
           } else {
-            // Add new participant
+            // Add new participant with initial steps
             await addParticipant(entry.name, entry.steps, null);
           }
         }

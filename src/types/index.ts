@@ -122,9 +122,9 @@ export const DEFAULT_CONFIG: ChallengeConfig = {
     first: 25,
     second: 15,
     third: 10,
-    teamBonusPerMember: 15, // $15 per team member
+    teamBonusPerMember: 15, // $15 per team member ($75 total for 5-member team)
   },
-  teamSize: 3,
+  teamSize: 5,
   heatWeekEnabled: true,
   teamCompetitionEnabled: true,
 };
