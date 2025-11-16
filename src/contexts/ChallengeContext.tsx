@@ -18,6 +18,7 @@ import {
   getLastSaved,
   getWeekly70kCounts,
   saveDailyHistory,
+  loadTeamCustomizations,
 } from '../utils/supabaseStorage';
 import {
   rankParticipants,
