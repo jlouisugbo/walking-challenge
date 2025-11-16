@@ -1,5 +1,5 @@
-import { supabase, supabaseAdmin, type DbParticipant, type DbDailyHistory, type DbWildcardResult, type DbWeeklyMilestone } from '../lib/supabase';
-import type { Participant, DailySteps, ChallengeConfig, WildcardResult } from '../types';
+import { supabase, supabaseAdmin, type DbParticipant, type DbDailyHistory, type DbWildcardResult, type DbWeeklyMilestone, type DbTeam } from '../lib/supabase';
+import type { Participant, DailySteps, ChallengeConfig, WildcardResult, TeamCustomization } from '../types';
 import { DEFAULT_CONFIG } from '../types';
 
 // ============================================
@@ -405,6 +405,108 @@ export const saveConfig = async (config: ChallengeConfig): Promise<void> => {
     if (error) throw error;
   } catch (error) {
     console.error('Error saving config:', error);
+  }
+};
+
+// ============================================
+// TEAM CUSTOMIZATION OPERATIONS
+// ============================================
+
+export const loadTeamCustomizations = async (): Promise<TeamCustomization[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('teams')
+      .select('*')
+      .order('team_name', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((dbTeam: DbTeam) => ({
+      id: dbTeam.id,
+      teamName: dbTeam.team_name,
+      displayName: dbTeam.display_name,
+      color: dbTeam.color,
+      icon: dbTeam.icon,
+      imageUrl: dbTeam.image_url || undefined,
+      description: dbTeam.description || undefined,
+      createdAt: new Date(dbTeam.created_at).getTime(),
+      updatedAt: new Date(dbTeam.updated_at).getTime(),
+    }));
+  } catch (error) {
+    console.error('Error loading team customizations:', error);
+    return [];
+  }
+};
+
+export const getTeamCustomization = async (teamName: string): Promise<TeamCustomization | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('teams')
+      .select('*')
+      .eq('team_name', teamName)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null; // No rows returned
+      throw error;
+    }
+
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      teamName: data.team_name,
+      displayName: data.display_name,
+      color: data.color,
+      icon: data.icon,
+      imageUrl: data.image_url || undefined,
+      description: data.description || undefined,
+      createdAt: new Date(data.created_at).getTime(),
+      updatedAt: new Date(data.updated_at).getTime(),
+    };
+  } catch (error) {
+    console.error('Error loading team customization:', error);
+    return null;
+  }
+};
+
+export const saveTeamCustomization = async (customization: Partial<TeamCustomization> & { teamName: string }): Promise<void> => {
+  try {
+    const dbData: any = {
+      team_name: customization.teamName,
+    };
+
+    if (customization.displayName !== undefined) dbData.display_name = customization.displayName;
+    if (customization.color !== undefined) dbData.color = customization.color;
+    if (customization.icon !== undefined) dbData.icon = customization.icon;
+    if (customization.imageUrl !== undefined) dbData.image_url = customization.imageUrl;
+    if (customization.description !== undefined) dbData.description = customization.description;
+
+    const { error } = await supabaseAdmin
+      .from('teams')
+      .upsert(dbData, {
+        onConflict: 'team_name'
+      });
+
+    if (error) throw error;
+
+    console.log('✅ Team customization saved successfully');
+  } catch (error) {
+    console.error('Error saving team customization:', error);
+    alert(`Failed to save team customization: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+export const deleteTeamCustomization = async (teamName: string): Promise<void> => {
+  try {
+    const { error } = await supabaseAdmin
+      .from('teams')
+      .delete()
+      .eq('team_name', teamName);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting team customization:', error);
   }
 };
 

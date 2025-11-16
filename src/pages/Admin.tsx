@@ -11,13 +11,17 @@ import {
   AlertTriangle,
   Calendar,
   Sparkles,
+  Palette,
+  Image as ImageIcon,
+  Type,
+  Award,
 } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { parsePacerLeaderboardFlexible } from '../utils/pacerParser';
 import { parseCSV, parseHistoricalCSV, generateSampleCSV, generateSampleHistoricalCSV } from '../utils/csvParser';
 import { formatNumber } from '../utils/calculations';
-import { exportDataFromSupabase, importDataToSupabase } from '../utils/supabaseStorage';
-import type { UpdatePreview } from '../types';
+import { exportDataFromSupabase, importDataToSupabase, loadTeamCustomizations, saveTeamCustomization } from '../utils/supabaseStorage';
+import type { UpdatePreview, TeamCustomization } from '../types';
 import { AdminProtected } from '../components/common/AdminProtected';
 import {
   getRandomWildcardCategory,
@@ -795,60 +799,301 @@ const ParticipantRow: React.FC<{
 };
 
 const TeamsTab: React.FC = () => {
-  const { participants, updateParticipant, config } = useChallenge();
+  const { participants, updateParticipant, config, refreshData } = useChallenge();
+  const [teamCustomizations, setTeamCustomizations] = useState<TeamCustomization[]>([]);
+  const [editingTeam, setEditingTeam] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<TeamCustomization>>({});
+  const [loading, setLoading] = useState(true);
 
-  const teams = ['Team Alpha', 'Team Bravo', 'Team Charlie', 'Team Delta', 'Team Echo'];
+  const defaultTeams = ['Team Alpha', 'Team Bravo', 'Team Charlie', 'Team Delta', 'Team Echo'];
+  const popularEmojis = ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠', '⚫', '⚪', '🟤', '⭐', '🏆', '🔥', '💪', '🚀', '⚡', '👑', '🎯', '💎'];
+  const popularColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#14b8a6', '#f97316', '#84cc16'];
+
+  React.useEffect(() => {
+    loadTeams();
+  }, []);
+
+  const loadTeams = async () => {
+    setLoading(true);
+    const customizations = await loadTeamCustomizations();
+    setTeamCustomizations(customizations);
+    setLoading(false);
+  };
+
+  const getTeamCustomization = (teamName: string): TeamCustomization | undefined => {
+    return teamCustomizations.find(tc => tc.teamName === teamName);
+  };
+
+  const handleEditTeam = (teamName: string) => {
+    const customization = getTeamCustomization(teamName);
+    setEditingTeam(teamName);
+    setEditForm({
+      teamName,
+      displayName: customization?.displayName || teamName,
+      color: customization?.color || '#8b5cf6',
+      icon: customization?.icon || '👥',
+      imageUrl: customization?.imageUrl || '',
+      description: customization?.description || '',
+    });
+  };
+
+  const handleSaveTeam = async () => {
+    if (!editForm.teamName) return;
+
+    await saveTeamCustomization({
+      teamName: editForm.teamName,
+      displayName: editForm.displayName || editForm.teamName,
+      color: editForm.color || '#8b5cf6',
+      icon: editForm.icon || '👥',
+      imageUrl: editForm.imageUrl || undefined,
+      description: editForm.description || undefined,
+    });
+
+    await loadTeams();
+    setEditingTeam(null);
+    setEditForm({});
+  };
 
   const handleAssignTeam = (participantId: string, team: string) => {
     updateParticipant(participantId, { team: team === 'none' ? null : team });
   };
 
-  return (
-    <div className="glass-card p-6">
-      <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        <UsersIcon className="w-6 h-6 text-accent" />
-        Team Assignment
-      </h2>
-
-      <p className="text-sm text-gray-400 mb-6">
-        Assign participants to teams. Teams should typically have {config.teamSize} members each.
-      </p>
-
-      {participants.length === 0 ? (
+  if (loading) {
+    return (
+      <div className="glass-card p-6">
         <div className="text-center py-12 text-gray-400">
-          <p>No participants to assign. Add some first!</p>
+          <p>Loading teams...</p>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {participants
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((participant) => (
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Team Customization Section */}
+      <div className="glass-card p-6">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Palette className="w-6 h-6 text-accent" />
+          Team Customization
+        </h2>
+
+        <p className="text-sm text-gray-400 mb-6">
+          Customize your teams with unique colors, icons, images, and descriptions to make them stand out!
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {defaultTeams.map((teamName) => {
+            const customization = getTeamCustomization(teamName);
+            const isEditing = editingTeam === teamName;
+
+            return (
               <div
-                key={participant.id}
-                className="flex items-center justify-between bg-primary-light/50 rounded-lg p-4"
+                key={teamName}
+                className="glass-card p-5 border-2 transition-all hover:scale-[1.02]"
+                style={{
+                  borderColor: customization?.color || '#8b5cf6' + '80',
+                  backgroundColor: (customization?.color || '#8b5cf6') + '10',
+                }}
               >
-                <div>
-                  <div className="text-white font-medium">{participant.name}</div>
-                  <div className="text-xs text-gray-400 stat-number">
-                    {formatNumber(participant.totalSteps)} steps
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <div className="text-center mb-4">
+                      <div className="text-5xl mb-2">{editForm.icon || '👥'}</div>
+                      <div className="text-sm text-gray-400">Select Icon</div>
+                      <div className="flex flex-wrap gap-2 justify-center mt-2">
+                        {popularEmojis.map((emoji) => (
+                          <button
+                            key={emoji}
+                            onClick={() => setEditForm({ ...editForm, icon: emoji })}
+                            className={`text-2xl p-2 rounded-lg transition-all ${
+                              editForm.icon === emoji ? 'bg-white/20 scale-110' : 'hover:bg-white/10'
+                            }`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">
+                        <Type className="w-4 h-4 inline mr-1" />
+                        Display Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.displayName || ''}
+                        onChange={(e) => setEditForm({ ...editForm, displayName: e.target.value })}
+                        className="w-full px-3 py-2 bg-primary-light rounded-lg border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                        placeholder="Team Alpha"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">
+                        <Palette className="w-4 h-4 inline mr-1" />
+                        Team Color
+                      </label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {popularColors.map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => setEditForm({ ...editForm, color })}
+                            className={`w-8 h-8 rounded-full transition-all ${
+                              editForm.color === color ? 'ring-2 ring-white scale-110' : ''
+                            }`}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                      <input
+                        type="color"
+                        value={editForm.color || '#8b5cf6'}
+                        onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
+                        className="w-full h-10 rounded-lg cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">
+                        <ImageIcon className="w-4 h-4 inline mr-1" />
+                        Image URL (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.imageUrl || ''}
+                        onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+                        className="w-full px-3 py-2 bg-primary-light rounded-lg border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                        placeholder="https://..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">Description (optional)</label>
+                      <textarea
+                        value={editForm.description || ''}
+                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                        className="w-full px-3 py-2 bg-primary-light rounded-lg border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                        rows={2}
+                        placeholder="Team motto or description..."
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button onClick={handleSaveTeam} className="btn-primary flex-1 text-sm py-2">
+                        <Save className="w-4 h-4 inline mr-1" />
+                        Save
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingTeam(null);
+                          setEditForm({});
+                        }}
+                        className="btn-secondary flex-1 text-sm py-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <select
-                  value={participant.team || 'none'}
-                  onChange={(e) => handleAssignTeam(participant.id, e.target.value)}
-                  className="px-4 py-2 bg-primary rounded-lg border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent"
-                >
-                  <option value="none">No Team</option>
-                  {teams.map((team) => (
-                    <option key={team} value={team}>
-                      {team}
-                    </option>
-                  ))}
-                </select>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <div className="text-6xl mb-2">{customization?.icon || '👥'}</div>
+                      {customization?.imageUrl && (
+                        <img
+                          src={customization.imageUrl}
+                          alt={customization.displayName}
+                          className="w-full h-24 object-cover rounded-lg mb-2"
+                        />
+                      )}
+                      <div className="text-xl font-bold text-white">
+                        {customization?.displayName || teamName}
+                      </div>
+                      {customization?.description && (
+                        <p className="text-xs text-gray-300 mt-2">{customization.description}</p>
+                      )}
+                      <div
+                        className="mt-2 w-full h-2 rounded-full"
+                        style={{ backgroundColor: customization?.color || '#8b5cf6' }}
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => handleEditTeam(teamName)}
+                      className="w-full btn-secondary text-sm py-2"
+                    >
+                      <Edit3 className="w-4 h-4 inline mr-1" />
+                      Customize
+                    </button>
+                  </div>
+                )}
               </div>
-            ))}
+            );
+          })}
         </div>
-      )}
+      </div>
+
+      {/* Participant Assignment Section */}
+      <div className="glass-card p-6">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <UsersIcon className="w-6 h-6 text-accent" />
+          Team Assignment
+        </h2>
+
+        <p className="text-sm text-gray-400 mb-6">
+          Assign participants to teams. Teams should typically have {config.teamSize} members each.
+        </p>
+
+        {participants.length === 0 ? (
+          <div className="text-center py-12 text-gray-400">
+            <p>No participants to assign. Add some first!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {participants
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((participant) => {
+                const teamCustomization = participant.team ? getTeamCustomization(participant.team) : undefined;
+                return (
+                  <div
+                    key={participant.id}
+                    className="flex items-center justify-between bg-primary-light/50 rounded-lg p-4 border-l-4"
+                    style={{
+                      borderLeftColor: teamCustomization?.color || 'transparent',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      {teamCustomization && (
+                        <span className="text-2xl">{teamCustomization.icon}</span>
+                      )}
+                      <div>
+                        <div className="text-white font-medium">{participant.name}</div>
+                        <div className="text-xs text-gray-400 stat-number">
+                          {formatNumber(participant.totalSteps)} steps
+                        </div>
+                      </div>
+                    </div>
+                    <select
+                      value={participant.team || 'none'}
+                      onChange={(e) => handleAssignTeam(participant.id, e.target.value)}
+                      className="px-4 py-2 bg-primary rounded-lg border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent"
+                    >
+                      <option value="none">No Team</option>
+                      {defaultTeams.map((team) => {
+                        const customization = getTeamCustomization(team);
+                        return (
+                          <option key={team} value={team}>
+                            {customization?.icon || '👥'} {customization?.displayName || team}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

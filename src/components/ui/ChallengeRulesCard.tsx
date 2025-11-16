@@ -38,7 +38,7 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
                     <span className="text-3xl">🥇</span>
                     <span className="text-white font-semibold">1st Place</span>
                   </div>
-                  <span className="text-2xl font-bold text-yellow-400">$40</span>
+                  <span className="text-2xl font-bold text-yellow-400">$25</span>
                 </div>
               </div>
               <div className="bg-gradient-to-r from-gray-300/20 to-gray-400/20 border border-gray-300/30 rounded-lg p-3">
@@ -47,7 +47,7 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
                     <span className="text-3xl">🥈</span>
                     <span className="text-white font-semibold">2nd Place</span>
                   </div>
-                  <span className="text-2xl font-bold text-gray-300">$25</span>
+                  <span className="text-2xl font-bold text-gray-300">$15</span>
                 </div>
               </div>
               <div className="bg-gradient-to-r from-amber-600/20 to-amber-700/20 border border-amber-600/30 rounded-lg p-3">
@@ -56,7 +56,7 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
                     <span className="text-3xl">🥉</span>
                     <span className="text-white font-semibold">3rd Place</span>
                   </div>
-                  <span className="text-2xl font-bold text-amber-600">$15</span>
+                  <span className="text-2xl font-bold text-amber-600">$10</span>
                 </div>
               </div>
             </div>
@@ -66,17 +66,23 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
           <section>
             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
               <Users className="w-6 h-6 text-purple-400" />
-              Team Competition
+              🏆 Team Competition - THE MAIN EVENT! 🏆
             </h3>
-            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 space-y-2">
-              <p className="text-gray-300 text-sm">
-                <strong className="text-white">Winning Team Gets:</strong> $10 per team member
+            <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-2 border-purple-400/50 rounded-lg p-4 space-y-3">
+              <p className="text-white text-base font-bold text-center">
+                This challenge is all about TEAMWORK! 💪
               </p>
               <p className="text-gray-300 text-sm">
-                <strong className="text-white">Team Size:</strong> 3 members each
+                <strong className="text-white">Winning Team Earns:</strong> $15 per team member! 💰
               </p>
               <p className="text-gray-300 text-sm">
-                <strong className="text-white">How it Works:</strong> Teams compete based on combined total steps. The team with the highest total wins!
+                <strong className="text-white">Team Size:</strong> 3 members per team
+              </p>
+              <p className="text-gray-300 text-sm">
+                <strong className="text-white">How it Works:</strong> After Heat Week, you'll be placed on a team! Your team competes based on COMBINED total steps. Every step you take helps your entire team win! Support each other, stay motivated together, and walk to victory! 🚶‍♂️🚶‍♀️
+              </p>
+              <p className="text-purple-300 text-sm font-semibold text-center mt-2">
+                Remember: Your team needs YOU to succeed! 🌟
               </p>
             </div>
           </section>

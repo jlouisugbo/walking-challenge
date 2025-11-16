@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Trophy, Users, Target, TrendingUp, Ticket, Footprints, Sparkles } from 'lucide-react';
+import { Trophy, Users, Target, TrendingUp, Ticket, Footprints, Sparkles, MapPin, Award, Calendar } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { CountdownTimer } from '../components/ui/CountdownTimer';
 import { StatsCard } from '../components/ui/StatsCard';
@@ -26,6 +26,11 @@ export const Dashboard: React.FC = () => {
   const topThree = rankedParticipants.slice(0, 3);
   const daysElapsed = calculateDaysElapsed(config.startDate);
   const inHeatWeek = isHeatWeek(config.startDate);
+
+  // Calculate additional stats
+  const totalMiles = (totalSteps * 0.0004734848).toFixed(1); // Average step to miles conversion
+  const totalWildcardPoints = rankedParticipants.reduce((sum, p) => sum + p.points, 0);
+  const avgDailySteps = daysElapsed > 0 ? Math.round(totalSteps / daysElapsed / participants.length) : 0;
 
   // Wildcard system
   const wildcardActive = isAfterHeatWeek();
@@ -232,7 +237,7 @@ export const Dashboard: React.FC = () => {
           <TrendingUp className="w-7 h-7 text-accent" />
           Challenge Statistics
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Total Steps"
             value={formatNumber(totalSteps)}
@@ -241,10 +246,10 @@ export const Dashboard: React.FC = () => {
             iconColor="text-accent"
           />
           <StatsCard
-            title="Average Steps"
-            value={formatNumber(averageSteps)}
-            icon={Target}
-            subtitle="Per participant"
+            title="Total Miles Walked"
+            value={`${formatNumber(Number(totalMiles))}`}
+            icon={MapPin}
+            subtitle="Distance covered by everyone"
             iconColor="text-green-400"
           />
           <StatsCard
@@ -255,26 +260,51 @@ export const Dashboard: React.FC = () => {
             iconColor="text-purple-400"
           />
           <StatsCard
+            title="Days Elapsed"
+            value={Math.max(0, daysElapsed)}
+            icon={Calendar}
+            subtitle="Since challenge started"
+            iconColor="text-blue-400"
+          />
+          <StatsCard
+            title="Average Steps"
+            value={formatNumber(averageSteps)}
+            icon={Target}
+            subtitle="Per participant (total)"
+            iconColor="text-cyan-400"
+          />
+          <StatsCard
+            title="Avg Daily Steps"
+            value={formatNumber(avgDailySteps)}
+            icon={TrendingUp}
+            subtitle="Per participant per day"
+            iconColor="text-orange-400"
+          />
+          <StatsCard
             title="Raffle Tickets"
             value={milestoneStats.totalTickets}
             icon={Ticket}
             subtitle="Total tickets earned"
             iconColor="text-yellow-400"
           />
-          <StatsCard
-            title="Days Elapsed"
-            value={Math.max(0, daysElapsed)}
-            icon={Trophy}
-            subtitle="Since challenge started"
-            iconColor="text-blue-400"
-          />
-          <StatsCard
-            title="300k Achieved"
-            value={milestoneStats.reached300k}
-            icon={Target}
-            subtitle={`${((milestoneStats.reached300k / (participants.length || 1)) * 100).toFixed(0)}% of participants`}
-            iconColor="text-green-400"
-          />
+          {wildcardActive && (
+            <StatsCard
+              title="Wildcard Points"
+              value={totalWildcardPoints}
+              icon={Award}
+              subtitle="Total points awarded"
+              iconColor="text-purple-400"
+            />
+          )}
+          {!wildcardActive && (
+            <StatsCard
+              title="300k Achieved"
+              value={milestoneStats.reached300k}
+              icon={Trophy}
+              subtitle={`${((milestoneStats.reached300k / (participants.length || 1)) * 100).toFixed(0)}% of participants`}
+              iconColor="text-green-400"
+            />
+          )}
         </div>
       </section>
 
@@ -326,37 +356,91 @@ export const Dashboard: React.FC = () => {
         </div>
       </section>
 
-      {/* Team Standings */}
+      {/* Top 2 Teams - Featured Section */}
       {!inHeatWeek && teams.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Users className="w-7 h-7 text-accent" />
-            Team Standings
-          </h2>
-          <div className="space-y-3">
-            {teams.slice(0, 5).map((team) => (
-              <div key={team.name} className="glass-card p-5 hover:scale-[1.02] transition-all">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="text-3xl font-bold text-gray-400">#{team.rank}</div>
-                    {team.rank === 1 && <span className="text-3xl">🏆</span>}
-                    <div>
-                      <div className="text-lg font-bold text-white">{team.name}</div>
-                      <div className="text-sm text-gray-400">
-                        {team.members.length} members • Avg: {formatNumber(team.averageSteps)} steps
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-bold text-white flex items-center justify-center gap-3 mb-2">
+              <Users className="w-8 h-8 text-purple-400" />
+              🏆 Top Teams Leading the Challenge! 🏆
+              <Users className="w-8 h-8 text-purple-400" />
+            </h2>
+            <p className="text-gray-300 text-lg">Working together to reach the goal!</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {teams.slice(0, 2).map((team, index) => (
+              <div
+                key={team.name}
+                className={`glass-card p-8 hover:scale-[1.02] transition-all relative overflow-hidden ${
+                  index === 0
+                    ? 'bg-gradient-to-br from-yellow-500/20 via-purple-500/20 to-pink-500/20 border-2 border-yellow-400/50'
+                    : 'bg-gradient-to-br from-purple-500/20 to-blue-500/20 border-2 border-purple-400/50'
+                }`}
+              >
+                {index === 0 && (
+                  <div className="absolute top-4 right-4 text-6xl opacity-20">👑</div>
+                )}
+
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`text-5xl font-bold ${index === 0 ? 'text-yellow-400' : 'text-purple-400'}`}>
+                        #{team.rank}
+                      </div>
+                      {team.rank === 1 && <span className="text-5xl animate-bounce">🏆</span>}
+                      {team.rank === 2 && <span className="text-4xl">🥈</span>}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold text-white mb-1">{team.name}</div>
+                    <div className="text-sm text-gray-300">
+                      {team.members.length} Team Members Strong
+                    </div>
+                  </div>
+
+                  <div className="bg-primary-light/50 rounded-lg p-4 mb-4">
+                    <div className="text-3xl font-bold text-accent stat-number mb-1">
+                      {formatNumber(team.totalSteps)}
+                    </div>
+                    <div className="text-xs text-gray-400">Combined Team Steps</div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-primary-light/30 rounded-lg p-3">
+                      <div className="text-gray-400 mb-1">Average/Member</div>
+                      <div className="font-bold text-white">{formatNumber(team.averageSteps)}</div>
+                    </div>
+                    <div className="bg-primary-light/30 rounded-lg p-3">
+                      <div className="text-gray-400 mb-1">Team Prize</div>
+                      <div className="font-bold text-green-400">
+                        {team.rank === 1 ? `$${config.prizes.teamBonusPerMember * team.members.length}` : '-'}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-accent stat-number">
-                      {formatNumber(team.totalSteps)}
-                    </div>
-                    <div className="text-xs text-gray-400">total steps</div>
-                  </div>
+
+                  <Link
+                    to="/teams"
+                    className="mt-4 block text-center bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/50 rounded-lg py-2 text-white font-semibold transition-all"
+                  >
+                    View Team Details →
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
+
+          {teams.length > 2 && (
+            <div className="text-center">
+              <Link
+                to="/teams"
+                className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-full font-bold transition-all"
+              >
+                View All {teams.length} Teams →
+              </Link>
+            </div>
+          )}
         </section>
       )}
     </div>

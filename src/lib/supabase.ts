@@ -71,3 +71,15 @@ export interface DbChallengeConfig {
   value: any;
   updated_at: string;
 }
+
+export interface DbTeam {
+  id: string;
+  team_name: string;
+  display_name: string;
+  color: string;
+  icon: string;
+  image_url: string | null;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
