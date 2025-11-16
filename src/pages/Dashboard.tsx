@@ -75,17 +75,17 @@ export const Dashboard: React.FC = () => {
   }, [wildcardActive, latestWildcard]);
 
   return (
-    <div className="space-y-8 animate-slide-up">
+    <div className="space-y-4 md:space-y-6 animate-slide-up">
       {/* Hero Section */}
-      <section className="text-center space-y-4">
-        <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-accent via-blue-400 to-purple-500 bg-clip-text text-transparent">
+      <section className="text-center space-y-2 md:space-y-3">
+        <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-accent via-blue-400 to-purple-500 bg-clip-text text-transparent">
           End the Semester Well!
         </h1>
-        <h2 className="text-2xl md:text-3xl font-semibold text-white">Step Challenge 2025</h2>
-        <div className="flex items-center justify-center gap-4 text-gray-400">
-          <span className="text-lg">🗓️ Nov 10 - Dec 10, 2025</span>
-          <span className="text-lg">•</span>
-          <span className="text-lg">👥 {participants.length} Participants</span>
+        <h2 className="text-xl md:text-2xl font-semibold text-white">Step Challenge 2025</h2>
+        <div className="flex items-center justify-center gap-2 md:gap-4 text-gray-400 text-sm md:text-base">
+          <span>🗓️ Nov 10 - Dec 10, 2025</span>
+          <span>•</span>
+          <span>👥 {participants.length} Participants</span>
         </div>
 
         {/* Challenge Status */}
@@ -93,12 +93,12 @@ export const Dashboard: React.FC = () => {
           {inHeatWeek ? (
             <Link
               to="/heat-week"
-              className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-full font-bold text-lg animate-pulse hover:from-orange-600 hover:to-red-600 transition-all cursor-pointer inline-block"
+              className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-full font-bold text-sm md:text-base animate-pulse hover:from-orange-600 hover:to-red-600 transition-all cursor-pointer inline-block"
             >
               🔥 HEAT WEEK - Individual Competition
             </Link>
           ) : (
-            <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full font-bold text-lg">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-full font-bold text-sm md:text-base">
               👥 Team Competition Active
             </div>
           )}
@@ -109,31 +109,31 @@ export const Dashboard: React.FC = () => {
       <CountdownTimer endDate={config.endDate} />
 
       {/* Prize Pool Section */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Trophy className="w-7 h-7 text-yellow-400" />
+      <section className="space-y-3 md:space-y-4">
+        <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+          <Trophy className="w-5 h-5 md:w-6 md:h-6 text-yellow-400" />
           Prize Pool
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="glass-card p-6 text-center gradient-gold">
-            <div className="text-4xl mb-2">🥇</div>
-            <div className="text-2xl font-bold text-white">${config.prizes.first}</div>
-            <div className="text-sm text-white/80 mt-1">1st Place</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+          <div className="glass-card p-4 md:p-5 text-center gradient-gold">
+            <div className="text-3xl md:text-4xl mb-1 md:mb-2">🥇</div>
+            <div className="text-xl md:text-2xl font-bold text-white">${config.prizes.first}</div>
+            <div className="text-xs md:text-sm text-white/80 mt-1">1st Place</div>
           </div>
-          <div className="glass-card p-6 text-center gradient-silver">
-            <div className="text-4xl mb-2">🥈</div>
-            <div className="text-2xl font-bold text-white">${config.prizes.second}</div>
-            <div className="text-sm text-gray-700 mt-1">2nd Place</div>
+          <div className="glass-card p-4 md:p-5 text-center gradient-silver">
+            <div className="text-3xl md:text-4xl mb-1 md:mb-2">🥈</div>
+            <div className="text-xl md:text-2xl font-bold text-white">${config.prizes.second}</div>
+            <div className="text-xs md:text-sm text-gray-700 mt-1">2nd Place</div>
           </div>
-          <div className="glass-card p-6 text-center gradient-bronze">
-            <div className="text-4xl mb-2">🥉</div>
-            <div className="text-2xl font-bold text-white">${config.prizes.third}</div>
-            <div className="text-sm text-white/80 mt-1">3rd Place</div>
+          <div className="glass-card p-4 md:p-5 text-center gradient-bronze">
+            <div className="text-3xl md:text-4xl mb-1 md:mb-2">🥉</div>
+            <div className="text-xl md:text-2xl font-bold text-white">${config.prizes.third}</div>
+            <div className="text-xs md:text-sm text-white/80 mt-1">3rd Place</div>
           </div>
-          <div className="glass-card p-6 text-center bg-gradient-to-br from-purple-500 to-indigo-600">
-            <div className="text-4xl mb-2">🏆</div>
-            <div className="text-2xl font-bold text-white">${config.prizes.teamBonusPerMember * config.teamSize}</div>
-            <div className="text-sm text-white/80 mt-1">Team Bonus (${config.prizes.teamBonusPerMember}/member)</div>
+          <div className="glass-card p-4 md:p-5 text-center bg-gradient-to-br from-purple-500 to-indigo-600">
+            <div className="text-3xl md:text-4xl mb-1 md:mb-2">🏆</div>
+            <div className="text-xl md:text-2xl font-bold text-white">${config.prizes.teamBonusPerMember * config.teamSize}</div>
+            <div className="text-xs md:text-sm text-white/80 mt-1">Team (${config.prizes.teamBonusPerMember}/member)</div>
           </div>
         </div>
       </section>
