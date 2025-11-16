@@ -18,7 +18,6 @@ import {
   getLastSaved,
   getWeekly70kCounts,
   saveDailyHistory,
-  loadTeamCustomizations,
 } from '../utils/supabaseStorage';
 import {
   rankParticipants,
@@ -263,34 +262,31 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const applyBulkUpdate = useCallback(
     async (previews: UpdatePreview[]) => {
-      // Get current date for standardized historical records (YYYY-MM-DD format)
-      const importDate = new Date().toISOString().split('T')[0];
-      console.log(`📅 Creating historical records for bulk import on ${importDate}`);
+      // Use standardized date/time for entire bulk import (EST timezone)
+      const now = new Date();
+      const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const dateStr = estDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+      console.log(`📅 Bulk import for date: ${dateStr}`);
 
       // Process all updates
       const updates = previews.map(async (preview) => {
         if (preview.status === 'new') {
-          // Add new participant
-          const newParticipant = await addParticipantDb(preview.name, preview.newSteps, null);
-
-          // Create historical record for new participant
-          if (newParticipant) {
-            await saveDailyHistory(newParticipant.id, importDate, preview.newSteps);
-            console.log(`✅ Created historical record for new participant: ${preview.name} (${preview.newSteps} steps on ${importDate})`);
-          }
-
-          return newParticipant;
+          // Add new participant - historical tracking starts from next import
+          const participantId = await addParticipantDb(preview.name, preview.newSteps, null);
+          console.log(`➕ New participant: ${preview.name} with ${preview.newSteps} steps (historical tracking starts from next import)`);
+          return participantId;
         } else if (preview.status === 'update' && preview.participant) {
           // Update existing participant
           await updateParticipantDb(preview.participant.id, {
             totalSteps: preview.newSteps,
           });
-
-          // Create/update historical record for existing participant
-          await saveDailyHistory(preview.participant.id, importDate, preview.newSteps);
-          console.log(`✅ Updated historical record for ${preview.name} (${preview.newSteps} steps on ${importDate})`);
-
-          return preview.participant;
+          // Save daily increment to history
+          const dailySteps = preview.newSteps - preview.oldSteps;
+          if (dailySteps !== 0) {
+            await saveDailyHistory(preview.participant.id, dateStr, dailySteps);
+            console.log(`📊 ${preview.name}: ${dailySteps > 0 ? '+' : ''}${dailySteps} steps for ${dateStr}`);
+          }
         }
       });
 

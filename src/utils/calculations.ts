@@ -33,6 +33,13 @@ export const calculateProgress = (steps: number, goal: number = 300000): number 
 };
 
 /**
+ * Convert steps to miles (average: 2,000 steps ≈ 1 mile)
+ */
+export const stepsToMiles = (steps: number): number => {
+  return steps / 2000;
+};
+
+/**
  * Get progress color class based on percentage
  */
 export const getProgressColor = (percent: number): string => {
