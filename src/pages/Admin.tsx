@@ -14,7 +14,6 @@ import {
   Palette,
   Image as ImageIcon,
   Type,
-  Award,
 } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { parsePacerLeaderboardFlexible } from '../utils/pacerParser';
@@ -799,7 +798,7 @@ const ParticipantRow: React.FC<{
 };
 
 const TeamsTab: React.FC = () => {
-  const { participants, updateParticipant, config, refreshData } = useChallenge();
+  const { participants, updateParticipant, config } = useChallenge();
   const [teamCustomizations, setTeamCustomizations] = useState<TeamCustomization[]>([]);
   const [editingTeam, setEditingTeam] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<TeamCustomization>>({});
