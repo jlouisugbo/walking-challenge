@@ -69,25 +69,35 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [loading, setLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [weekly70kCounts, setWeekly70kCounts] = useState<Map<string, number>>(new Map());
+  const [teamCustomizations, setTeamCustomizations] = useState<Map<string, import('../types').TeamCustomization>>(new Map());
 
   // Load initial data from Supabase
   const loadData = useCallback(async () => {
     console.log('📊 Loading challenge data from Supabase...');
     setLoading(true);
     try {
-      const [participantsData, configData, weekly70kCountsData] = await Promise.all([
+      const [participantsData, configData, weekly70kCountsData, teamCustomizationsData] = await Promise.all([
         loadParticipants(),
         loadConfig(),
         getWeekly70kCounts(),
+        loadTeamCustomizations(),
       ]);
       console.log('✅ Data loaded:', {
         participants: participantsData.length,
         config: configData,
-        weekly70kCounts: weekly70kCountsData.size
+        weekly70kCounts: weekly70kCountsData.size,
+        teamCustomizations: teamCustomizationsData.length
       });
       setParticipants(participantsData);
       setConfig(configData);
       setWeekly70kCounts(weekly70kCountsData);
+
+      // Convert team customizations array to map for easy lookup
+      const customizationsMap = new Map(
+        teamCustomizationsData.map(tc => [tc.teamName, tc])
+      );
+      setTeamCustomizations(customizationsMap);
+
       setLastSaved(getLastSaved());
     } catch (error) {
       console.error('❌ Error loading data:', error);
@@ -141,8 +151,24 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [participants, config, weekly70kCounts]);
 
   const teams = useMemo(() => {
-    return calculateTeams(rankedParticipants);
-  }, [rankedParticipants]);
+    const calculatedTeams = calculateTeams(rankedParticipants);
+
+    // Merge team customizations
+    return calculatedTeams.map(team => {
+      const customization = teamCustomizations.get(team.name);
+      if (customization) {
+        return {
+          ...team,
+          color: customization.color,
+          icon: customization.icon,
+          imageUrl: customization.imageUrl,
+          description: customization.description,
+          customization,
+        };
+      }
+      return team;
+    });
+  }, [rankedParticipants, teamCustomizations]);
 
   const totalSteps = useMemo(() => {
     return calculateTotalSteps(participants);
@@ -266,6 +292,8 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       await Promise.all(updates);
       await refreshData();
+
+      console.log(`🎉 Bulk update completed with historical records for ${previews.length} participants`);
     },
     [refreshData]
   );

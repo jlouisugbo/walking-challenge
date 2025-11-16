@@ -16,6 +16,18 @@ export interface Participant {
   dailyHistory?: DailySteps[]; // Track steps each day
 }
 
+export interface TeamCustomization {
+  id: string;
+  teamName: string;
+  displayName: string;
+  color: string;
+  icon: string;
+  imageUrl?: string;
+  description?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Team {
   name: string;
   members: Participant[];
@@ -23,6 +35,10 @@ export interface Team {
   averageSteps: number;
   rank: number;
   color?: string;
+  icon?: string;
+  imageUrl?: string;
+  description?: string;
+  customization?: TeamCustomization;
 }
 
 export interface ParticipantWithRank extends Participant {
