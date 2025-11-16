@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin, type DbParticipant, type DbDailyHistory, type DbWildcardResult, type DbWeeklyMilestone, type DbTeam } from '../lib/supabase';
+import { supabase, type DbParticipant, type DbDailyHistory, type DbWildcardResult, type DbWeeklyMilestone, type DbTeam } from '../lib/supabase';
 import type { Participant, DailySteps, ChallengeConfig, WildcardResult, TeamCustomization } from '../types';
 import { DEFAULT_CONFIG } from '../types';
 
@@ -61,7 +61,7 @@ export const saveParticipants = async (_participants: Participant[]): Promise<vo
 export const addParticipant = async (name: string, steps: number = 0, team: string | null = null): Promise<Participant | null> => {
   try {
     console.log('💾 Adding participant to Supabase:', { name, steps, team });
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabase
       .from('participants')
       .insert({
         name: name.trim(),
@@ -91,7 +91,7 @@ export const addParticipant = async (name: string, steps: number = 0, team: stri
     };
   } catch (error) {
     console.error('❌ Fatal error adding participant:', error);
-    alert(`Failed to add participant: ${error instanceof Error ? error.message : 'Unknown error'}\n\nMake sure you've run the SQL setup script in Supabase!`);
+    alert(`Failed to add participant: ${error instanceof Error ? error.message : 'Unknown error'}\n\nMake sure you've run the RLS_POLICIES.sql script in Supabase!`);
     return null;
   }
 };
@@ -106,7 +106,7 @@ export const updateParticipant = async (id: string, updates: Partial<Participant
     if (updates.team !== undefined) dbUpdates.team = updates.team;
     if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
 
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('participants')
       .update(dbUpdates)
       .eq('id', id);
@@ -125,7 +125,7 @@ export const updateParticipant = async (id: string, updates: Partial<Participant
 
 export const deleteParticipant = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('participants')
       .delete()
       .eq('id', id);
@@ -148,7 +148,7 @@ export const awardWildcardPoint = async (participantId: string): Promise<void> =
     if (!participant) return;
 
     // Increment points
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('participants')
       .update({ points: participant.points + 1 })
       .eq('id', participantId);
@@ -165,7 +165,7 @@ export const awardWildcardPoint = async (participantId: string): Promise<void> =
 
 export const saveDailyHistory = async (participantId: string, date: string, steps: number): Promise<void> => {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('daily_history')
       .upsert({
         participant_id: participantId,
@@ -187,7 +187,7 @@ export const saveDailyHistory = async (participantId: string, date: string, step
 
 export const saveWildcardResult = async (result: WildcardResult): Promise<void> => {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('wildcard_results')
       .upsert({
         date: result.date,
@@ -298,7 +298,7 @@ export const saveWeeklyMilestone = async (
   achieved70k: boolean
 ): Promise<void> => {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('weekly_milestones')
       .upsert({
         participant_id: participantId,
@@ -393,7 +393,7 @@ export const loadConfig = async (): Promise<ChallengeConfig> => {
 
 export const saveConfig = async (config: ChallengeConfig): Promise<void> => {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('challenge_config')
       .upsert({
         key: 'main_config',
@@ -482,7 +482,7 @@ export const saveTeamCustomization = async (customization: Partial<TeamCustomiza
     if (customization.imageUrl !== undefined) dbData.image_url = customization.imageUrl;
     if (customization.description !== undefined) dbData.description = customization.description;
 
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('teams')
       .upsert(dbData, {
         onConflict: 'team_name'
@@ -499,7 +499,7 @@ export const saveTeamCustomization = async (customization: Partial<TeamCustomiza
 
 export const deleteTeamCustomization = async (teamName: string): Promise<void> => {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('teams')
       .delete()
       .eq('team_name', teamName);
@@ -565,7 +565,7 @@ export const importDataToSupabase = async (jsonString: string): Promise<boolean>
     if (data.participants && Array.isArray(data.participants)) {
       for (const participant of data.participants) {
         // Insert or update each participant
-        const { error } = await supabaseAdmin
+        const { error } = await supabase
           .from('participants')
           .upsert({
             id: participant.id,
@@ -585,7 +585,7 @@ export const importDataToSupabase = async (jsonString: string): Promise<boolean>
         // Import daily history if present
         if (participant.dailyHistory && Array.isArray(participant.dailyHistory)) {
           for (const day of participant.dailyHistory) {
-            await supabaseAdmin
+            await supabase
               .from('daily_history')
               .upsert({
                 participant_id: participant.id,
@@ -607,7 +607,7 @@ export const importDataToSupabase = async (jsonString: string): Promise<boolean>
     // Import wildcard results
     if (data.wildcardResults && Array.isArray(data.wildcardResults)) {
       for (const result of data.wildcardResults) {
-        await supabaseAdmin
+        await supabase
           .from('wildcard_results')
           .upsert({
             id: result.id,
