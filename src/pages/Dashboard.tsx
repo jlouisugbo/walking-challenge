@@ -6,7 +6,7 @@ import { useChallenge } from '../contexts/ChallengeContext';
 import { CountdownTimer } from '../components/ui/CountdownTimer';
 import { StatsCard } from '../components/ui/StatsCard';
 import { ParticipantCard } from '../components/ui/ParticipantCard';
-import { formatNumber, calculateDaysElapsed, isHeatWeek, stepsToMiles } from '../utils/calculations';
+import { formatNumber, calculateDaysElapsed, isHeatWeek } from '../utils/calculations';
 import { isAfterHeatWeek, getWildcardResults, WILDCARD_CATEGORIES } from '../utils/wildcardSystem';
 import type { WildcardResult } from '../types';
 
