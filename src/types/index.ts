@@ -103,10 +103,10 @@ export const DEFAULT_CONFIG: ChallengeConfig = {
   goalSteps: 300000,
   milestones: [150000, 225000, 300000],
   prizes: {
-    first: 40,
-    second: 25,
-    third: 15,
-    teamBonusPerMember: 10, // $10 per team member
+    first: 25,
+    second: 15,
+    third: 10,
+    teamBonusPerMember: 15, // $15 per team member
   },
   teamSize: 3,
   heatWeekEnabled: true,

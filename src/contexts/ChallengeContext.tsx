@@ -17,6 +17,7 @@ import {
   saveConfig,
   getLastSaved,
   getWeekly70kCounts,
+  saveDailyHistory,
 } from '../utils/supabaseStorage';
 import {
   rankParticipants,
@@ -235,16 +236,31 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const applyBulkUpdate = useCallback(
     async (previews: UpdatePreview[]) => {
+      // Use standardized date/time for entire bulk import (EST timezone)
+      const now = new Date();
+      const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const dateStr = estDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+      console.log(`📅 Bulk import for date: ${dateStr}`);
+
       // Process all updates
       const updates = previews.map(async (preview) => {
         if (preview.status === 'new') {
-          // Add new participant
-          return addParticipantDb(preview.name, preview.newSteps, null);
+          // Add new participant - historical tracking starts from next import
+          const participantId = await addParticipantDb(preview.name, preview.newSteps, null);
+          console.log(`➕ New participant: ${preview.name} with ${preview.newSteps} steps (historical tracking starts from next import)`);
+          return participantId;
         } else if (preview.status === 'update' && preview.participant) {
           // Update existing participant
-          return updateParticipantDb(preview.participant.id, {
+          await updateParticipantDb(preview.participant.id, {
             totalSteps: preview.newSteps,
           });
+          // Save daily increment to history
+          const dailySteps = preview.newSteps - preview.oldSteps;
+          if (dailySteps !== 0) {
+            await saveDailyHistory(preview.participant.id, dateStr, dailySteps);
+            console.log(`📊 ${preview.name}: ${dailySteps > 0 ? '+' : ''}${dailySteps} steps for ${dateStr}`);
+          }
         }
       });
 

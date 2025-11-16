@@ -25,11 +25,30 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Main Prizes */}
+          {/* Team Challenge - MAIN FOCUS */}
+          <section>
+            <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+              <Users className="w-6 h-6 text-purple-400" />
+              🏆 TEAM COMPETITION (Main Event!)
+            </h3>
+            <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-2 border-purple-500/50 rounded-lg p-4 space-y-2">
+              <p className="text-gray-300 text-sm">
+                <strong className="text-white text-lg">Winning Team Gets:</strong> <span className="text-2xl text-purple-400 font-bold">$15 per team member!</span>
+              </p>
+              <p className="text-gray-300 text-sm">
+                <strong className="text-white">Team Size:</strong> 3 members each
+              </p>
+              <p className="text-gray-300 text-sm">
+                <strong className="text-white">How it Works:</strong> Teams compete based on combined total steps. The team with the highest total wins! Work together, motivate each other, and dominate! 💪
+              </p>
+            </div>
+          </section>
+
+          {/* Individual Prizes - Secondary */}
           <section>
             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
               <Trophy className="w-6 h-6 text-yellow-400" />
-              Top 3 Individual Prizes
+              Individual Bonuses (Top 3)
             </h3>
             <div className="space-y-2">
               <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg p-3">
@@ -38,7 +57,7 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
                     <span className="text-3xl">🥇</span>
                     <span className="text-white font-semibold">1st Place</span>
                   </div>
-                  <span className="text-2xl font-bold text-yellow-400">$40</span>
+                  <span className="text-2xl font-bold text-yellow-400">$25</span>
                 </div>
               </div>
               <div className="bg-gradient-to-r from-gray-300/20 to-gray-400/20 border border-gray-300/30 rounded-lg p-3">
@@ -47,7 +66,7 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
                     <span className="text-3xl">🥈</span>
                     <span className="text-white font-semibold">2nd Place</span>
                   </div>
-                  <span className="text-2xl font-bold text-gray-300">$25</span>
+                  <span className="text-2xl font-bold text-gray-300">$15</span>
                 </div>
               </div>
               <div className="bg-gradient-to-r from-amber-600/20 to-amber-700/20 border border-amber-600/30 rounded-lg p-3">
@@ -56,28 +75,9 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
                     <span className="text-3xl">🥉</span>
                     <span className="text-white font-semibold">3rd Place</span>
                   </div>
-                  <span className="text-2xl font-bold text-amber-600">$15</span>
+                  <span className="text-2xl font-bold text-amber-600">$10</span>
                 </div>
               </div>
-            </div>
-          </section>
-
-          {/* Team Challenge */}
-          <section>
-            <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-              <Users className="w-6 h-6 text-purple-400" />
-              Team Competition
-            </h3>
-            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 space-y-2">
-              <p className="text-gray-300 text-sm">
-                <strong className="text-white">Winning Team Gets:</strong> $10 per team member
-              </p>
-              <p className="text-gray-300 text-sm">
-                <strong className="text-white">Team Size:</strong> 3 members each
-              </p>
-              <p className="text-gray-300 text-sm">
-                <strong className="text-white">How it Works:</strong> Teams compete based on combined total steps. The team with the highest total wins!
-              </p>
             </div>
           </section>
 
