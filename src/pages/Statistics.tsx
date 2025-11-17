@@ -162,69 +162,55 @@ export const Statistics: React.FC = () => {
       {comparisonData.length > 0 && (
         <>
           {/* Stats Comparison */}
-          <div className="glass-card p-3 md:p-4">
-            <h2 className="text-base md:text-lg font-bold text-white mb-2 md:mb-3 flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 md:w-5 md:h-5 text-accent" />
+          <div className="glass-card p-2 md:p-3">
+            <h2 className="text-sm md:text-base font-bold text-white mb-1.5 flex items-center gap-1.5">
+              <BarChart3 className="w-4 h-4 text-accent" />
               Stats Comparison
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5">
               {comparisonData.map((participant, index) => (
                 <div
                   key={participant.id}
-                  className="bg-primary-light/50 rounded p-2 md:p-3"
-                  style={{ borderLeft: `4px solid ${COLORS[index % COLORS.length]}` }}
+                  className="bg-primary-light/50 rounded p-1.5"
+                  style={{ borderLeft: `3px solid ${COLORS[index % COLORS.length]}` }}
                 >
-                  <div className="font-semibold text-white mb-2 text-sm md:text-base">{participant.name}</div>
+                  <div className="font-semibold text-white mb-1 text-xs md:text-sm truncate">{participant.name}</div>
 
-                  <div className="space-y-1 text-xs md:text-sm">
+                  <div className="space-y-0.5 text-[10px] md:text-xs">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Rank</span>
                       <span className="text-white font-semibold">#{participant.rank}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Total Steps</span>
+                      <span className="text-gray-400">Steps</span>
                       <span className="text-accent font-semibold stat-number">
                         {formatNumber(participant.totalSteps)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Miles Walked</span>
+                      <span className="text-gray-400">Miles</span>
                       <span className="text-blue-400 font-semibold">
-                        {stepsToMiles(participant.totalSteps).toFixed(1)} mi
+                        {stepsToMiles(participant.totalSteps).toFixed(1)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Progress</span>
                       <span className="text-green-400 font-semibold">
-                        {participant.progressPercent.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Raffle Tickets</span>
-                      <span className="text-yellow-400 font-semibold">
-                        {participant.raffleTickets}
+                        {participant.progressPercent.toFixed(0)}%
                       </span>
                     </div>
                     {participant.points > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Wildcard Points</span>
+                        <span className="text-gray-400">Wildcards</span>
                         <span className="text-purple-400 font-semibold">
                           {participant.points}
                         </span>
                       </div>
                     )}
-                    {participant.weekly70kCount && participant.weekly70kCount > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">70k Weeks</span>
-                        <span className="text-green-400 font-semibold">
-                          {participant.weekly70kCount}
-                        </span>
-                      </div>
-                    )}
                     {participant.dailyHistory && participant.dailyHistory.length > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Daily Avg</span>
+                        <span className="text-gray-400">Avg/Day</span>
                         <span className="text-white font-semibold stat-number">
                           {formatNumber(Math.round(participant.totalSteps / participant.dailyHistory.length))}
                         </span>

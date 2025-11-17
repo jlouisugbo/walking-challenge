@@ -317,8 +317,9 @@ export const calculateWildcardWinner = (
 
 // Check if Heat Week has passed (Nov 10-16, 2025)
 export const isAfterHeatWeek = (date: Date = new Date()): boolean => {
-  const heatWeekEnd = new Date('2025-11-16T23:59:59');
-  return date > heatWeekEnd;
+  // Heat week ends on Nov 16, so wildcard starts on Nov 17
+  const wildcardStart = new Date('2025-11-17T00:00:00');
+  return date >= wildcardStart;
 };
 
 // Re-export Supabase storage functions for wildcard results

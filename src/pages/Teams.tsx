@@ -6,7 +6,7 @@ import { formatNumber, stepsToMiles } from '../utils/calculations';
 import { loadTeamComments, saveTeamComment, type TeamComment } from '../utils/supabaseStorage';
 
 export const Teams: React.FC = () => {
-  const { teams, config } = useChallenge();
+  const { teams } = useChallenge();
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
   const [comments, setComments] = useState<Map<string, TeamComment[]>>(new Map());
   const [commentsModalTeam, setCommentsModalTeam] = useState<string | null>(null);
@@ -235,7 +235,14 @@ export const Teams: React.FC = () => {
                         <div className="bg-yellow-400/10 rounded p-2">
                           <div className="text-xs text-gray-400">Prize</div>
                           <div className="text-sm font-bold text-yellow-400">
-                            ${config.prizes.teamBonusPerMember * team.members.length}
+                            ${team.rank === 1 ? 50 : team.rank === 2 ? 25 : 0}
+                          </div>
+                        </div>
+                      ) : team.rank === 2 ? (
+                        <div className="bg-yellow-400/10 rounded p-2">
+                          <div className="text-xs text-gray-400">Prize</div>
+                          <div className="text-sm font-bold text-yellow-400">
+                            $25
                           </div>
                         </div>
                       ) : null;
