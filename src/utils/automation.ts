@@ -3,13 +3,14 @@
  * Handles automatic wildcard selection and team formation
  */
 
-import { supabaseAdmin } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import type { Participant } from '../types';
 import {
   getRandomWildcardCategory,
   calculateWildcardWinner,
 } from './wildcardSystem';
 import { saveWildcardResult, getWildcardResults, awardWildcardPoint } from './supabaseStorage';
+import { getCurrentEST } from './calculations';
 
 // ============================================
 // AUTOMATED WILDCARD SELECTION
@@ -26,22 +27,21 @@ export const checkAndRunAutomatedWildcard = async (participants: Participant[]):
     const existingDates = new Set(existingResults.map(r => r.date));
 
     // Find all dates that should have a wildcard
-    // Heat Week: Nov 10-16, Wildcard starts Nov 17
-    const heatWeekEnd = new Date('2025-11-16T23:59:59');
-    const today = new Date();
-    const yesterday = new Date(today);
+    // Heat Week: Nov 10-16, Wildcard starts Nov 17, 2025 12:00 AM EST
+    const nowEST = getCurrentEST();
+    const teamStartDate = new Date('2025-11-17T00:00:00'); // Nov 17, 2025 12:00 AM EST
+    const yesterday = new Date(nowEST);
     yesterday.setDate(yesterday.getDate() - 1);
 
     // Only process up to yesterday (not today)
-    if (yesterday <= heatWeekEnd) {
+    if (nowEST < teamStartDate) {
       console.log('Wildcard not active yet (Heat Week not over)');
       return;
     }
 
-    // Find all missing dates between Heat Week end and yesterday
+    // Find all missing dates between team start date and yesterday
     const missingDates: string[] = [];
-    const currentDate = new Date(heatWeekEnd);
-    currentDate.setDate(currentDate.getDate() + 1); // Start Nov 17 (first day after Heat Week)
+    const currentDate = new Date(teamStartDate);
 
     while (currentDate <= yesterday) {
       const dateStr = currentDate.toISOString().split('T')[0];
@@ -102,11 +102,11 @@ export const checkAndRunAutomatedTeamFormation = async (
   config: any
 ): Promise<boolean> => {
   try {
-    // Check if we're after Heat Week ends (midnight Nov 16 -> Nov 17 00:00:00 Monday morning)
-    const heatWeekEnd = new Date('2025-11-17T00:00:00');
-    const now = new Date();
+    // Check if we're after Heat Week ends (Nov 17, 2025 12:00 AM EST)
+    const nowEST = getCurrentEST();
+    const teamStartDate = new Date('2025-11-17T00:00:00'); // Nov 17, 2025 12:00 AM EST
 
-    if (now < heatWeekEnd) {
+    if (nowEST < teamStartDate) {
       console.log('Still in Heat Week - teams not formed yet');
       return false;
     }
@@ -120,32 +120,25 @@ export const checkAndRunAutomatedTeamFormation = async (
     // Teams need to be formed!
     console.log('Running automated team formation...');
 
-    // Sort participants by total steps (descending)
+    // Sort participants by total steps (descending) - best to worst
     const sorted = [...participants].sort((a, b) => b.totalSteps - a.totalSteps);
-
-    // Top 5 are captains
-    const captains = sorted.slice(0, 5);
-    const remaining = sorted.slice(5);
 
     // Team names
     const teamNames = ['Team Alpha', 'Team Bravo', 'Team Charlie', 'Team Delta', 'Team Echo'];
 
-    // Assign captains to teams
-    const teamAssignments: { [participantId: string]: string } = {};
-    captains.forEach((captain, index) => {
-      teamAssignments[captain.id] = teamNames[index];
-    });
+    // Initialize teams
+    const teams: { [teamName: string]: Participant[] } = {};
+    teamNames.forEach(name => teams[name] = []);
 
-    // Snake draft for remaining participants
-    // Randomize the remaining participants first
-    const shuffled = [...remaining].sort(() => Math.random() - 0.5);
-
-    // Snake pattern: 0,1,2,3,4,4,3,2,1,0,0,1,2,3,4...
+    // Balanced snake draft: distribute top performers across teams
+    // Pattern: 0,1,2,3,4,4,3,2,1,0,0,1,2,3,4 (snake pattern)
+    // This ensures each team gets a mix of high and low performers
     let teamIndex = 0;
     let direction = 1; // 1 for forward, -1 for backward
 
-    shuffled.forEach((participant) => {
-      teamAssignments[participant.id] = teamNames[teamIndex];
+    sorted.forEach((participant, index) => {
+      const teamName = teamNames[teamIndex];
+      teams[teamName].push(participant);
 
       // Move to next team
       teamIndex += direction;
@@ -161,15 +154,17 @@ export const checkAndRunAutomatedTeamFormation = async (
     });
 
     // Update all participants with team assignments
-    for (const [participantId, teamName] of Object.entries(teamAssignments)) {
-      await supabaseAdmin
-        .from('participants')
-        .update({ team: teamName })
-        .eq('id', participantId);
+    for (const [teamName, teamMembers] of Object.entries(teams)) {
+      for (const participant of teamMembers) {
+        await supabase
+          .from('participants')
+          .update({ team: teamName })
+          .eq('id', participant.id);
+      }
     }
 
     // Mark teams as formed in config
-    await supabaseAdmin
+    await supabase
       .from('challenge_config')
       .upsert({
         key: 'teamsFormed',
@@ -179,8 +174,11 @@ export const checkAndRunAutomatedTeamFormation = async (
       });
 
     console.log('✅ Automated team formation completed!');
-    console.log(`Captains: ${captains.map(c => c.name).join(', ')}`);
-    console.log(`Teams formed with ${participants.length} participants`);
+    console.log('Teams formed with balanced distribution:');
+    teamNames.forEach(name => {
+      const totalSteps = teams[name].reduce((sum, p) => sum + p.totalSteps, 0);
+      console.log(`  ${name}: ${teams[name].length} members, ${totalSteps} total steps`);
+    });
 
     return true;
   } catch (error) {

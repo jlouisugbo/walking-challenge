@@ -145,21 +145,35 @@ export const calculateDaysRemaining = (endDate: string): number => {
 };
 
 /**
- * Calculate days elapsed since start
+ * Get current time in EST timezone
+ */
+export const getCurrentEST = (): Date => {
+  // Get current time and convert to EST
+  const now = new Date();
+  const estString = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+  return new Date(estString);
+};
+
+/**
+ * Calculate days elapsed since start (using EST timezone)
  */
 export const calculateDaysElapsed = (startDate: string): number => {
-  const start = new Date(startDate);
-  const now = new Date();
-  const diff = now.getTime() - start.getTime();
+  const start = new Date(startDate + 'T00:00:00');  // Assume start date is EST midnight
+  const nowEST = getCurrentEST();
+  const diff = nowEST.getTime() - start.getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 };
 
 /**
- * Check if currently in Heat Week (first week)
+ * Check if currently in Heat Week (first 7 days: Nov 10-16, 2025)
+ * Heat Week ends Nov 17, 2025 12:00 AM EST
  */
 export const isHeatWeek = (startDate: string): boolean => {
-  const daysElapsed = calculateDaysElapsed(startDate);
-  return daysElapsed >= 0 && daysElapsed < 7;
+  // Heat Week is specifically Nov 10-16, 2025
+  // Teams start Nov 17, 2025 12:00 AM EST
+  const nowEST = getCurrentEST();
+  const teamStartDate = new Date('2025-11-17T00:00:00'); // Nov 17, 2025 12:00 AM EST
+  return nowEST < teamStartDate;
 };
 
 /**
