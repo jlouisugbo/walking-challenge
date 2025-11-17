@@ -4,6 +4,19 @@ export interface DailySteps {
   timestamp: number;
 }
 
+export interface Badge {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+}
+
+export interface RankChange {
+  change: number;
+  direction: 'up' | 'down' | 'same';
+}
+
 export interface Participant {
   id: string;
   name: string;
@@ -28,17 +41,10 @@ export interface TeamCustomization {
   updatedAt: number;
 }
 
-export interface Team {
-  name: string;
-  members: Participant[];
-  totalSteps: number;
-  averageSteps: number;
-  rank: number;
-  color?: string;
-  icon?: string;
-  imageUrl?: string;
-  description?: string;
-  customization?: TeamCustomization;
+export interface MilestoneStatus {
+  reached150k: boolean;
+  reached225k: boolean;
+  reached300k: boolean;
 }
 
 export interface ParticipantWithRank extends Participant {
@@ -51,12 +57,22 @@ export interface ParticipantWithRank extends Participant {
   trend?: 'up' | 'down' | 'stable';
   pointsRank?: number; // Rank by points
   weekly70kCount?: number; // Total number of weeks achieved 70k
+  streak?: number; // Current streak of consecutive days with 10k+ steps
+  badges?: Badge[]; // Earned badges/achievements
+  rankChange?: RankChange; // Rank change from yesterday
 }
 
-export interface MilestoneStatus {
-  reached150k: boolean;
-  reached225k: boolean;
-  reached300k: boolean;
+export interface Team {
+  name: string;
+  members: ParticipantWithRank[];
+  totalSteps: number;
+  averageSteps: number;
+  rank: number;
+  color?: string;
+  icon?: string;
+  imageUrl?: string;
+  description?: string;
+  customization?: TeamCustomization;
 }
 
 export interface ChallengeConfig {
@@ -122,9 +138,9 @@ export const DEFAULT_CONFIG: ChallengeConfig = {
     first: 25,
     second: 15,
     third: 10,
-    teamBonusPerMember: 15, // $15 per team member
+    teamBonusPerMember: 15, // $15 per team member ($75 total for 5-member team)
   },
-  teamSize: 3,
+  teamSize: 5,
   heatWeekEnabled: true,
   teamCompetitionEnabled: true,
 };

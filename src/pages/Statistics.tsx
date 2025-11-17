@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TrendingUp, Users, BarChart3, LineChart as LineChartIcon } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
-import { formatNumber } from '../utils/calculations';
+import { formatNumber, stepsToMiles } from '../utils/calculations';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export const Statistics: React.FC = () => {
@@ -189,6 +189,12 @@ export const Statistics: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-gray-400">Miles Walked</span>
+                      <span className="text-blue-400 font-semibold">
+                        {stepsToMiles(participant.totalSteps).toFixed(1)} mi
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-gray-400">Progress</span>
                       <span className="text-green-400 font-semibold">
                         {participant.progressPercent.toFixed(1)}%
@@ -200,6 +206,22 @@ export const Statistics: React.FC = () => {
                         {participant.raffleTickets}
                       </span>
                     </div>
+                    {participant.points > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Wildcard Points</span>
+                        <span className="text-purple-400 font-semibold">
+                          {participant.points}
+                        </span>
+                      </div>
+                    )}
+                    {participant.weekly70kCount && participant.weekly70kCount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">70k Weeks</span>
+                        <span className="text-green-400 font-semibold">
+                          {participant.weekly70kCount}
+                        </span>
+                      </div>
+                    )}
                     {participant.dailyHistory && participant.dailyHistory.length > 0 && (
                       <div className="flex justify-between">
                         <span className="text-gray-400">Daily Avg</span>
