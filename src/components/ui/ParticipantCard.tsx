@@ -29,17 +29,18 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
   return (
     <div
-      className={`glass-card px-3 md:px-4 py-2 md:py-2.5 hover:scale-[1.01] transition-all duration-200 cursor-pointer ${
+      className={`glass-card px-2 md:px-3 py-1.5 md:py-2 hover:scale-[1.01] transition-all duration-200 cursor-pointer ${
         isTopThree ? rankColorClass : ''
       } ${className}`}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between mb-1.5 md:mb-2">
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="flex items-center gap-1 md:gap-2">
-            {medal && <span className="text-xl md:text-2xl">{medal}</span>}
-            <div className="flex items-center gap-1">
-              <div className={`text-lg md:text-xl font-bold ${isTopThree ? 'text-white' : 'text-gray-400'}`}>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1.5 md:gap-2 flex-1 min-w-0">
+          {/* Medal & Rank */}
+          <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
+            {medal && <span className="text-lg md:text-xl">{medal}</span>}
+            <div className="flex items-center gap-0.5">
+              <div className={`text-sm md:text-base font-bold ${isTopThree ? 'text-white' : 'text-gray-400'}`}>
                 #{participant.rank}
               </div>
               {participant.rankChange && participant.rankChange.direction !== 'same' && participant.rankChange.change > 0 && (
@@ -55,17 +56,21 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
               )}
             </div>
           </div>
-          <div>
-            <h3 className="text-base md:text-lg font-bold text-white">{participant.name}</h3>
+
+          {/* Name & Team (inline) */}
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <h3 className="text-sm md:text-base font-bold text-white truncate">{participant.name}</h3>
             {showTeam && participant.team && (
-              <span className="text-xs bg-accent/20 text-accent px-1.5 md:px-2 py-0.5 md:py-1 rounded-full">
+              <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
                 {teamDisplayName}
               </span>
             )}
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-lg md:text-xl font-bold text-accent stat-number">
+
+        {/* Steps */}
+        <div className="text-right flex-shrink-0 ml-2">
+          <div className="text-base md:text-lg font-bold text-accent stat-number">
             {formatNumber(participant.totalSteps)}
           </div>
           <div className="text-xs text-gray-400">
@@ -76,28 +81,29 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
       {!compact && (
         <>
-          <ProgressBar percent={participant.progressPercent} className="mb-1.5" />
-
-          {/* Badges */}
-          {participant.badges && participant.badges.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-1.5">
-              {participant.badges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-white/5 ${badge.color} text-xs`}
-                  title={badge.description}
-                >
-                  <span className="text-xs">{badge.icon}</span>
-                  <span className="font-semibold hidden sm:inline">{badge.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <ProgressBar percent={participant.progressPercent} className="mb-1" />
 
           <div className="flex items-center justify-between">
-            <MilestoneIndicator milestones={participant.milestones} size="sm" />
+            {/* Left side: Milestones & Badges */}
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <MilestoneIndicator milestones={participant.milestones} size="sm" />
+              {participant.badges && participant.badges.length > 0 && (
+                <div className="flex gap-0.5">
+                  {participant.badges.slice(0, 3).map((badge) => (
+                    <span
+                      key={badge.id}
+                      className="text-xs"
+                      title={badge.description}
+                    >
+                      {badge.icon}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
+            {/* Right side: Stats */}
+            <div className="flex items-center gap-1.5 md:gap-2 text-xs flex-shrink-0">
               {participant.streak && participant.streak > 0 && (
                 <div className="flex items-center gap-0.5 md:gap-1 text-orange-400">
                   <span className="text-xs md:text-sm">🔥</span>
