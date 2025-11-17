@@ -4,6 +4,7 @@ import type { ParticipantWithRank } from '../../types';
 import { formatNumber, getRankMedal, getRankColor, stepsToMiles } from '../../utils/calculations';
 import { ProgressBar } from './ProgressBar';
 import { MilestoneIndicator } from './MilestoneIndicator';
+import { useChallenge } from '../../contexts/ChallengeContext';
 
 interface ParticipantCardProps {
   participant: ParticipantWithRank;
@@ -20,9 +21,11 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
   compact = false,
   className = '',
 }) => {
+  const { getTeamDisplayName } = useChallenge();
   const medal = getRankMedal(participant.rank);
   const rankColorClass = getRankColor(participant.rank);
   const isTopThree = participant.rank <= 3;
+  const teamDisplayName = getTeamDisplayName(participant.team);
 
   return (
     <div
@@ -56,7 +59,7 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
             <h3 className="text-base md:text-lg font-bold text-white">{participant.name}</h3>
             {showTeam && participant.team && (
               <span className="text-xs bg-accent/20 text-accent px-1.5 md:px-2 py-0.5 md:py-1 rounded-full">
-                {participant.team}
+                {teamDisplayName}
               </span>
             )}
           </div>

@@ -6,6 +6,7 @@ import type {
   ChallengeConfig,
   UpdatePreview,
   PacerEntry,
+  TeamCustomization,
 } from '../types';
 import { supabase } from '../lib/supabase';
 import {
@@ -64,6 +65,10 @@ interface ChallengeContextType {
   updateConfig: (updates: Partial<ChallengeConfig>) => Promise<void>;
   refreshData: () => Promise<void>;
   resetChallenge: () => void;
+
+  // Team customization helpers
+  getTeamDisplayName: (teamName: string | null) => string;
+  getTeamCustomization: (teamName: string | null) => TeamCustomization | undefined;
 }
 
 const ChallengeContext = createContext<ChallengeContextType | undefined>(undefined);
@@ -221,12 +226,13 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const teams = useMemo(() => {
     const calculatedTeams = calculateTeams(rankedParticipants);
 
-    // Merge team customizations
+    // Merge team customizations (name, color, icon, image, description)
     return calculatedTeams.map(team => {
       const customization = teamCustomizations.get(team.name);
       if (customization) {
         return {
           ...team,
+          name: customization.displayName, // Use display name from customization
           color: customization.color,
           icon: customization.icon,
           imageUrl: customization.imageUrl,
@@ -383,6 +389,18 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // You would need to manually delete from Supabase dashboard
   }, []);
 
+  // Team customization helper functions
+  const getTeamCustomization = useCallback((teamName: string | null): TeamCustomization | undefined => {
+    if (!teamName) return undefined;
+    return teamCustomizations.get(teamName);
+  }, [teamCustomizations]);
+
+  const getTeamDisplayName = useCallback((teamName: string | null): string => {
+    if (!teamName) return '';
+    const customization = teamCustomizations.get(teamName);
+    return customization?.displayName || teamName;
+  }, [teamCustomizations]);
+
   const value: ChallengeContextType = {
     participants,
     config: config || ({} as ChallengeConfig), // Fallback for initial render
@@ -403,6 +421,8 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateConfig,
     refreshData,
     resetChallenge,
+    getTeamDisplayName,
+    getTeamCustomization,
   };
 
   // Show loading screen while initial data loads

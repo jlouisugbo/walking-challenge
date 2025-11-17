@@ -150,11 +150,25 @@ export const Dashboard: React.FC = () => {
               <Link
                 key={team.name}
                 to="/teams"
-                className="glass-card p-6 hover:scale-[1.02] transition-all duration-200 cursor-pointer bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-500/30"
+                className="glass-card p-6 hover:scale-[1.02] transition-all duration-200 cursor-pointer bg-gradient-to-br from-purple-500/10 to-pink-500/10"
+                style={{ borderLeft: `4px solid ${team.color || '#8b5cf6'}` }}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <span className="text-4xl">{idx === 0 ? '🥇' : '🥈'}</span>
+                    {/* Team Image - 64x64px */}
+                    {team.imageUrl ? (
+                      <img
+                        src={team.imageUrl}
+                        alt={team.name}
+                        className="w-16 h-16 object-cover rounded-lg border-2 border-accent/30"
+                        style={{ width: '64px', height: '64px' }}
+                      />
+                    ) : (
+                      <div className="w-16 h-16 flex items-center justify-center bg-primary-light/50 rounded-lg border-2 border-accent/30">
+                        <span className="text-3xl">{team.icon || '👥'}</span>
+                      </div>
+                    )}
                     <div>
                       <h3 className="text-2xl font-bold text-white">{team.name}</h3>
                       <div className="text-sm text-gray-400">Rank #{team.rank}</div>

@@ -100,9 +100,21 @@ export const Teams: React.FC = () => {
                 className="w-full px-3 md:px-4 py-2 md:py-3 hover:bg-white/5 transition-colors flex items-center justify-between"
               >
                 <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                  {/* Rank & Icon */}
+                  {/* Rank & Icon/Image */}
                   <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                    <span className="text-2xl md:text-3xl">{team.icon || '👥'}</span>
+                    {/* Team Image - 48x48px on desktop, 40x40px on mobile */}
+                    {team.imageUrl ? (
+                      <img
+                        src={team.imageUrl}
+                        alt={team.name}
+                        className="w-10 h-10 md:w-12 md:h-12 object-cover rounded-lg border-2 border-accent/30"
+                        style={{ width: '40px', height: '40px' }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-primary-light/50 rounded-lg">
+                        <span className="text-2xl md:text-3xl">{team.icon || '👥'}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-1">
                       {isTopTeam && <Crown className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />}
                       <span className="text-lg md:text-xl font-bold text-gray-400">#{team.rank}</span>
