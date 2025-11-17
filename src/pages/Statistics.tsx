@@ -122,17 +122,17 @@ export const Statistics: React.FC = () => {
       </div>
 
       {/* Participant Selection */}
-      <div className="glass-card p-3 md:p-4">
-        <h2 className="text-base md:text-lg font-bold text-white mb-2 md:mb-3 flex items-center gap-2">
-          <Users className="w-4 h-4 md:w-5 md:h-5 text-accent" />
+      <div className="glass-card p-2 md:p-3">
+        <h2 className="text-sm md:text-base font-bold text-white mb-1.5 flex items-center gap-1.5">
+          <Users className="w-4 h-4 text-accent" />
           Compare Participants ({selectedParticipants.length}/5)
         </h2>
 
-        <p className="text-xs md:text-sm text-gray-400 mb-2 md:mb-3">
+        <p className="text-[10px] md:text-xs text-gray-400 mb-1.5">
           Select up to 5 participants to compare
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 md:gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1">
           {rankedParticipants.map((participant) => {
             const isSelected = selectedParticipants.includes(participant.id);
             const canSelect = selectedParticipants.length < 5 || isSelected;
@@ -142,7 +142,7 @@ export const Statistics: React.FC = () => {
                 key={participant.id}
                 onClick={() => canSelect && toggleParticipant(participant.id)}
                 disabled={!canSelect}
-                className={`p-2 rounded text-left transition-all ${
+                className={`p-1.5 rounded text-left transition-all ${
                   isSelected
                     ? 'bg-accent text-white font-semibold'
                     : canSelect
@@ -150,8 +150,8 @@ export const Statistics: React.FC = () => {
                     : 'bg-primary-light/30 text-gray-600 cursor-not-allowed'
                 }`}
               >
-                <div className="text-xs md:text-sm truncate">{participant.name}</div>
-                <div className="text-xs opacity-75 stat-number">{formatNumber(participant.totalSteps)}</div>
+                <div className="text-[10px] md:text-xs truncate">{participant.name}</div>
+                <div className="text-[10px] opacity-75 stat-number">{formatNumber(participant.totalSteps)}</div>
               </button>
             );
           })}

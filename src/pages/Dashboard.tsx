@@ -138,83 +138,6 @@ export const Dashboard: React.FC = () => {
         </div>
       </section>
 
-      {/* Top 2 Teams - MAIN FOCUS */}
-      {teams.length >= 2 && !inHeatWeek && (
-        <section className="space-y-4">
-          <h2 className="text-3xl font-bold text-white flex items-center gap-2">
-            <Users className="w-8 h-8 text-purple-400" />
-            🏆 Top Teams
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {teams.slice(0, 2).map((team, idx) => (
-              <Link
-                key={team.name}
-                to="/teams"
-                className="glass-card p-6 hover:scale-[1.02] transition-all duration-200 cursor-pointer bg-gradient-to-br from-purple-500/10 to-pink-500/10"
-                style={{ borderLeft: `4px solid ${team.color || '#8b5cf6'}` }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">{idx === 0 ? '🥇' : '🥈'}</span>
-                    {/* Team Image - 64x64px */}
-                    {team.imageUrl ? (
-                      <img
-                        src={team.imageUrl}
-                        alt={team.name}
-                        className="w-16 h-16 object-cover rounded-lg border-2 border-accent/30"
-                        style={{ width: '64px', height: '64px' }}
-                      />
-                    ) : (
-                      <div className="w-16 h-16 flex items-center justify-center bg-primary-light/50 rounded-lg border-2 border-accent/30">
-                        <span className="text-3xl">{team.icon || '👥'}</span>
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="text-2xl font-bold text-white">{team.name}</h3>
-                      <div className="text-sm text-gray-400">Rank #{team.rank}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-purple-400 stat-number">
-                      {formatNumber(team.totalSteps)}
-                    </div>
-                    <div className="text-xs text-gray-400">total steps</div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-400">Team Members:</span>
-                    <span className="text-white font-semibold">{team.members.length}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-400">Average Per Member:</span>
-                    <span className="text-white font-semibold">{formatNumber(team.averageSteps)}</span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {team.members.map((member) => (
-                      <div
-                        key={member.id}
-                        className="bg-white/10 px-3 py-1 rounded-full text-xs text-white"
-                      >
-                        {member.name}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="text-center">
-            <Link
-              to="/teams"
-              className="inline-block text-purple-400 hover:text-purple-300 font-semibold transition-colors"
-            >
-              View All Teams →
-            </Link>
-          </div>
-        </section>
-      )}
-
       {/* Wildcard System */}
       {wildcardActive && (
         <section className="space-y-4">
@@ -224,59 +147,69 @@ export const Dashboard: React.FC = () => {
           </h2>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Latest Winner */}
-            {latestWildcard && (
-              <div className="glass-card p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">{(WILDCARD_CATEGORIES as any)[latestWildcard.category].emoji}</span>
-                  <h3 className="text-lg font-bold text-white">Latest Winner</h3>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-xl font-bold text-purple-300">
-                    🏆 {latestWildcard.winnerName}
-                  </div>
-                  <div className="text-sm text-gray-300">
-                    {(WILDCARD_CATEGORIES as any)[latestWildcard.category].name}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {latestWildcard.description}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-2">
-                    {new Date(latestWildcard.date).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Top Points Leaders */}
-            <div className="glass-card p-6">
+            {/* Top Wildcard Winner */}
+            <div className="glass-card p-6 bg-gradient-to-br from-yellow-500/10 to-purple-500/10 border border-yellow-400/30">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-5 h-5 text-yellow-400" />
-                <h3 className="text-lg font-bold text-white">Top Wildcard Leaders</h3>
+                <Trophy className="w-6 h-6 text-yellow-400" />
+                <h3 className="text-lg font-bold text-white">Top Wildcard Winner</h3>
               </div>
               {topWildcardLeaders.length > 0 ? (
-                <div className="space-y-2">
-                  {topWildcardLeaders.map((participant, index) => (
-                    <div
-                      key={participant.id}
-                      className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
-                        <span className="text-white">{participant.name}</span>
-                      </div>
-                      <div className="text-yellow-400 font-semibold">
-                        {participant.points} pts
-                      </div>
+                <div className="space-y-3">
+                  <div className="text-center py-4">
+                    <div className="text-5xl mb-2">👑</div>
+                    <div className="text-2xl font-bold text-yellow-400 mb-1">
+                      {topWildcardLeaders[0].name}
                     </div>
-                  ))}
+                    <div className="text-sm text-gray-300 mb-2">
+                      Leading the Wildcard Challenge
+                    </div>
+                    <div className="bg-primary-light/50 rounded-lg p-3 inline-block">
+                      <div className="text-3xl font-bold text-yellow-400">
+                        {topWildcardLeaders[0].points}
+                      </div>
+                      <div className="text-xs text-gray-400">Wildcard Points</div>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="text-center text-gray-400 py-4">
+                <div className="text-center text-gray-400 py-8">
                   <p className="text-sm">No wildcard points awarded yet!</p>
                 </div>
               )}
             </div>
+
+            {/* Last Wildcard Spun */}
+            {latestWildcard && (
+              <div className="glass-card p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-2xl">{(WILDCARD_CATEGORIES as any)[latestWildcard.category].emoji}</span>
+                  <h3 className="text-lg font-bold text-white">Last Wildcard Spun</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="text-center py-4">
+                    <div className="text-5xl mb-2">🎲</div>
+                    <div className="text-xl font-bold text-purple-300 mb-1">
+                      {latestWildcard.winnerName}
+                    </div>
+                    <div className="text-sm text-gray-300 mb-2">
+                      {(WILDCARD_CATEGORIES as any)[latestWildcard.category].name}
+                    </div>
+                    <div className="bg-primary-light/50 rounded-lg p-3">
+                      <div className="text-xs text-gray-400 mb-1">
+                        {latestWildcard.description}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-2">
+                        {new Date(latestWildcard.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="glass-card p-4 bg-purple-500/10 border border-purple-500/30">
