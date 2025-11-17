@@ -21,11 +21,13 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
   compact = false,
   className = '',
 }) => {
-  const { getTeamDisplayName } = useChallenge();
+  const { getTeamDisplayName, getTeamCustomization } = useChallenge();
   const medal = getRankMedal(participant.rank);
   const rankColorClass = getRankColor(participant.rank);
   const isTopThree = participant.rank <= 3;
   const teamDisplayName = getTeamDisplayName(participant.team);
+  const teamCustomization = getTeamCustomization(participant.team);
+  const teamColor = teamCustomization?.color || '#8b5cf6';
 
   return (
     <div
@@ -61,7 +63,14 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
           <div className="flex items-center gap-1 flex-1 min-w-0">
             <h3 className="text-xs md:text-sm font-bold text-white truncate">{participant.name}</h3>
             {showTeam && participant.team && (
-              <span className="text-[10px] md:text-xs bg-accent/20 text-accent px-1 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+              <span 
+                className="text-[10px] md:text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 font-semibold"
+                style={{ 
+                  backgroundColor: `${teamColor}40`, 
+                  color: teamColor,
+                  border: `1px solid ${teamColor}60`
+                }}
+              >
                 {teamDisplayName}
               </span>
             )}
@@ -70,7 +79,7 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
         {/* Steps */}
         <div className="text-right flex-shrink-0 ml-1">
-          <div className="text-sm md:text-base font-bold text-accent stat-number">
+          <div className={`text-sm md:text-base font-bold stat-number ${isTopThree ? 'text-white' : 'text-white'}`}>
             {formatNumber(participant.totalSteps)}
           </div>
           <div className="text-[10px] md:text-xs text-gray-400">
@@ -103,7 +112,7 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
             </div>
 
             {/* Right side: Stats */}
-            <div className="flex items-center gap-1 text-[10px] md:text-xs flex-shrink-0">
+            <div className="flex items-center gap-1.5 text-[10px] md:text-xs flex-shrink-0">
               {participant.streak && participant.streak > 0 && (
                 <div className="flex items-center gap-0.5 text-orange-400">
                   <span className="text-[10px] md:text-xs">🔥</span>
@@ -111,12 +120,11 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
                 </div>
               )}
 
-              {participant.points > 0 && (
-                <div className="flex items-center gap-0.5 text-purple-400">
-                  <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                  <span className="font-semibold">{participant.points}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-0.5 text-purple-400">
+                <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                <span className="font-medium text-purple-300">WC:</span>
+                <span className="font-semibold">{participant.points}</span>
+              </div>
 
               {participant.weekly70kCount && participant.weekly70kCount > 0 && (
                 <div className="flex items-center gap-0.5 text-green-400">

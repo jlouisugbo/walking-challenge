@@ -1,3 +1,15 @@
+/* Dynamic team badge styling using data-color attribute */
+.team-badge {
+  border: 1px solid var(--team-border, #888);
+  background-color: var(--team-bg, rgba(136,136,136,0.25));
+  color: var(--team-color, #888);
+}
+
+[data-color] {
+  --team-color: attr(data-color color);
+  --team-border: attr(data-color color);
+  --team-bg: color-mix(in srgb, attr(data-color color) 30%, transparent);
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

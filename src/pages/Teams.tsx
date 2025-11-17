@@ -7,7 +7,7 @@ import { loadTeamComments, saveTeamComment, type TeamComment } from '../utils/su
 
 export const Teams: React.FC = () => {
   const { teams } = useChallenge();
-  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
+  const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
   const [comments, setComments] = useState<Map<string, TeamComment[]>>(new Map());
   const [commentsModalTeam, setCommentsModalTeam] = useState<string | null>(null);
   const [newCommentName, setNewCommentName] = useState('');
@@ -31,7 +31,15 @@ export const Teams: React.FC = () => {
   }, [teams]);
 
   const toggleTeam = (teamName: string) => {
-    setExpandedTeam(expandedTeam === teamName ? null : teamName);
+    setExpandedTeams(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(teamName)) {
+        newSet.delete(teamName);
+      } else {
+        newSet.add(teamName);
+      }
+      return newSet;
+    });
   };
 
   const openCommentsModal = (teamName: string) => {
@@ -84,6 +92,7 @@ export const Teams: React.FC = () => {
   }
 
   return (
+    <>
     <div className="space-y-2 md:space-y-3 animate-slide-up">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -97,7 +106,7 @@ export const Teams: React.FC = () => {
       {/* Compact Team Cards - Grid on Desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-3">
         {teams.map((team) => {
-          const isExpanded = expandedTeam === team.name;
+          const isExpanded = expandedTeams.has(team.name);
           const isTopTeam = team.rank === 1;
 
           // Generate trend data for line chart
@@ -122,9 +131,8 @@ export const Teams: React.FC = () => {
           return (
             <div
               key={team.name}
-              className="glass-card overflow-hidden cursor-pointer hover:border-accent/30 transition-colors"
+              className="glass-card overflow-hidden hover:border-accent/30 transition-colors"
               style={{ borderLeft: `4px solid ${team.color || '#8b5cf6'}` }}
-              onClick={() => toggleTeam(team.name)}
             >
               {/* Compact Team Header */}
               <div className="p-2 md:p-3">
@@ -173,13 +181,6 @@ export const Teams: React.FC = () => {
                         </span>
                       )}
                     </button>
-                    <div className="p-1.5">
-                      {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-accent" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      )}
-                    </div>
                   </div>
                 </div>
 
@@ -206,8 +207,7 @@ export const Teams: React.FC = () => {
               </div>
 
               {/* Expanded Details */}
-              {isExpanded && (
-                <div className="border-t border-white/10 p-2 md:p-3 bg-primary-light/20 space-y-2">
+              <div className="border-t border-white/10 p-2 md:p-3 bg-primary-light/20 space-y-2">
                   {/* Team Stats - Avg/Member and Most Improved side by side */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-primary-light/50 rounded p-2">
@@ -329,7 +329,7 @@ export const Teams: React.FC = () => {
                     )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
@@ -408,6 +408,6 @@ export const Teams: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
