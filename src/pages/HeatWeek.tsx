@@ -6,7 +6,7 @@ import { isHeatWeek, calculateDaysElapsed } from '../utils/calculations';
 
 export const HeatWeek: React.FC = () => {
   const { rankedParticipants, config } = useChallenge();
-  const inHeatWeek = isHeatWeek(config.startDate);
+  const inHeatWeek = isHeatWeek();
   const daysElapsed = calculateDaysElapsed(config.startDate);
 
   const topFive = rankedParticipants.slice(0, 5);

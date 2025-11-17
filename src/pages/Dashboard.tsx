@@ -25,7 +25,7 @@ export const Dashboard: React.FC = () => {
 
   const topThree = rankedParticipants.slice(0, 3);
   const daysElapsed = calculateDaysElapsed(config.startDate);
-  const inHeatWeek = isHeatWeek(config.startDate);
+  const inHeatWeek = isHeatWeek();
 
   // Calculate additional stats
   const totalMiles = (totalSteps * 0.0004734848).toFixed(1); // Average step to miles conversion

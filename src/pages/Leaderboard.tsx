@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, Trophy, ArrowUpDown, X } from 'lucide-react';
+import { Search, SlidersHorizontal, Trophy, ArrowUpDown, X, TrendingUp } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { ParticipantCard } from '../components/ui/ParticipantCard';
+import { PersonalChartModal } from '../components/ui/PersonalChartModal';
 import type { SortField, SortDirection } from '../types';
 
 export const Leaderboard: React.FC = () => {
@@ -12,6 +13,7 @@ export const Leaderboard: React.FC = () => {
   const [pointsFilter, setPointsFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('rank');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [showChartModal, setShowChartModal] = useState(false);
 
   // Get unique teams
   const teams = useMemo(() => {
@@ -121,8 +123,18 @@ export const Leaderboard: React.FC = () => {
           <Trophy className="w-6 h-6 md:w-8 md:h-8 text-accent" />
           Full Leaderboard
         </h1>
-        <div className="text-gray-400 text-sm md:text-base">
-          {filteredParticipants.length} participants
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowChartModal(true)}
+            className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-accent/20 hover:bg-accent/30 text-accent rounded-lg transition-colors text-sm md:text-base font-semibold"
+          >
+            <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">View My Chart</span>
+            <span className="sm:hidden">Chart</span>
+          </button>
+          <div className="text-gray-400 text-sm md:text-base">
+            {filteredParticipants.length} participants
+          </div>
         </div>
       </div>
 
@@ -249,6 +261,14 @@ export const Leaderboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Personal Chart Modal */}
+      {showChartModal && (
+        <PersonalChartModal
+          participants={rankedParticipants}
+          onClose={() => setShowChartModal(false)}
+        />
+      )}
     </div>
   );
 };

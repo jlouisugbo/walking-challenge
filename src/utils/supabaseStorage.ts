@@ -629,3 +629,61 @@ export const importDataToSupabase = async (jsonString: string): Promise<boolean>
     return false;
   }
 };
+
+// ============================================
+// TEAM COMMENTS
+// ============================================
+
+export interface TeamComment {
+  id: string;
+  teamName: string;
+  authorName: string;
+  comment: string;
+  createdAt: number;
+}
+
+export const loadTeamComments = async (teamName: string): Promise<TeamComment[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('team_comments')
+      .select('*')
+      .eq('team_name', teamName)
+      .order('created_at', { ascending: false })
+      .limit(20); // Limit to last 20 comments
+
+    if (error) throw error;
+
+    return (data || []).map((comment: any) => ({
+      id: comment.id,
+      teamName: comment.team_name,
+      authorName: comment.author_name,
+      comment: comment.comment,
+      createdAt: new Date(comment.created_at).getTime(),
+    }));
+  } catch (error) {
+    console.error('Error loading team comments:', error);
+    return [];
+  }
+};
+
+export const saveTeamComment = async (
+  teamName: string,
+  authorName: string,
+  comment: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('team_comments')
+      .insert({
+        team_name: teamName,
+        author_name: authorName,
+        comment: comment,
+      });
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error saving team comment:', error);
+    return false;
+  }
+};

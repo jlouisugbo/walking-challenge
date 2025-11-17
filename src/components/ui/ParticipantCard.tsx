@@ -35,8 +35,21 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-1 md:gap-2">
             {medal && <span className="text-xl md:text-2xl">{medal}</span>}
-            <div className={`text-lg md:text-xl font-bold ${isTopThree ? 'text-white' : 'text-gray-400'}`}>
-              #{participant.rank}
+            <div className="flex items-center gap-1">
+              <div className={`text-lg md:text-xl font-bold ${isTopThree ? 'text-white' : 'text-gray-400'}`}>
+                #{participant.rank}
+              </div>
+              {participant.rankChange && participant.rankChange.direction !== 'same' && participant.rankChange.change > 0 && (
+                <div
+                  className={`flex items-center text-xs font-semibold ${
+                    participant.rankChange.direction === 'up' ? 'text-green-400' : 'text-red-400'
+                  }`}
+                  title={`${participant.rankChange.direction === 'up' ? 'Moved up' : 'Moved down'} ${participant.rankChange.change} spot${participant.rankChange.change > 1 ? 's' : ''} since yesterday`}
+                >
+                  {participant.rankChange.direction === 'up' ? '↑' : '↓'}
+                  {participant.rankChange.change}
+                </div>
+              )}
             </div>
           </div>
           <div>
@@ -62,10 +75,33 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
         <>
           <ProgressBar percent={participant.progressPercent} className="mb-1.5" />
 
+          {/* Badges */}
+          {participant.badges && participant.badges.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-1.5">
+              {participant.badges.map((badge) => (
+                <div
+                  key={badge.id}
+                  className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-white/5 ${badge.color} text-xs`}
+                  title={badge.description}
+                >
+                  <span className="text-xs">{badge.icon}</span>
+                  <span className="font-semibold hidden sm:inline">{badge.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <MilestoneIndicator milestones={participant.milestones} size="sm" />
 
             <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
+              {participant.streak && participant.streak > 0 && (
+                <div className="flex items-center gap-0.5 md:gap-1 text-orange-400">
+                  <span className="text-xs md:text-sm">🔥</span>
+                  <span className="font-semibold">{participant.streak}</span>
+                </div>
+              )}
+
               {participant.points > 0 && (
                 <div className="flex items-center gap-0.5 md:gap-1 text-purple-400">
                   <Sparkles className="w-3 h-3 md:w-4 md:h-4" />

@@ -136,7 +136,7 @@ export const checkAndRunAutomatedTeamFormation = async (
     let teamIndex = 0;
     let direction = 1; // 1 for forward, -1 for backward
 
-    sorted.forEach((participant, index) => {
+    sorted.forEach((participant) => {
       const teamName = teamNames[teamIndex];
       teams[teamName].push(participant);
 

@@ -1,14 +1,53 @@
-import React, { useState } from 'react';
-import { Users, Trophy, ChevronDown, ChevronUp, Award, Crown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Trophy, ChevronDown, ChevronUp, Award, Crown, TrendingUp, MessageSquare, Send } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { formatNumber, stepsToMiles } from '../utils/calculations';
+import { loadTeamComments, saveTeamComment, type TeamComment } from '../utils/supabaseStorage';
 
 export const Teams: React.FC = () => {
   const { teams, config } = useChallenge();
   const [expandedTeam, setExpandedTeam] = useState<string | null>(teams[0]?.name || null);
+  const [comments, setComments] = useState<Map<string, TeamComment[]>>(new Map());
+  const [newCommentName, setNewCommentName] = useState('');
+  const [newCommentText, setNewCommentText] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
 
   const toggleTeam = (teamName: string) => {
     setExpandedTeam(expandedTeam === teamName ? null : teamName);
+  };
+
+  // Load comments for expanded team
+  useEffect(() => {
+    if (expandedTeam && !comments.has(expandedTeam)) {
+      loadTeamComments(expandedTeam).then((teamComments) => {
+        setComments(new Map(comments.set(expandedTeam, teamComments)));
+      });
+    }
+  }, [expandedTeam]);
+
+  // Handle comment submission
+  const handleSubmitComment = async (teamName: string) => {
+    if (!newCommentName.trim() || !newCommentText.trim()) {
+      alert('Please enter both your name and a comment.');
+      return;
+    }
+
+    setSubmittingComment(true);
+    const success = await saveTeamComment(teamName, newCommentName.trim(), newCommentText.trim());
+
+    if (success) {
+      // Reload comments
+      const teamComments = await loadTeamComments(teamName);
+      setComments(new Map(comments.set(teamName, teamComments)));
+      // Clear form
+      setNewCommentName('');
+      setNewCommentText('');
+    } else {
+      alert('Failed to post comment. Please try again.');
+    }
+
+    setSubmittingComment(false);
   };
 
   if (teams.length === 0) {
@@ -142,6 +181,86 @@ export const Teams: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Team Dynamics */}
+                  <div className="bg-primary-light/30 rounded-lg p-3 md:p-4">
+                    <div className="text-xs md:text-sm text-gray-400 mb-3 flex items-center gap-2">
+                      <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
+                      Team Dynamics
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Contribution Pie Chart */}
+                      <div>
+                        <div className="text-xs text-gray-400 mb-2">Member Contributions</div>
+                        <ResponsiveContainer width="100%" height={150}>
+                          <PieChart>
+                            <Pie
+                              data={team.members.map((m) => ({
+                                name: m.name,
+                                value: m.totalSteps,
+                              }))}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={50}
+                              label={(entry) => `${((entry.value / team.totalSteps) * 100).toFixed(0)}%`}
+                              labelLine={false}
+                            >
+                              {team.members.map((_, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={['#00d4ff', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'][index % 5]}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: '#1a1f2e',
+                                border: '1px solid rgba(0, 212, 255, 0.3)',
+                                borderRadius: '8px',
+                              }}
+                              formatter={(value: number) => formatNumber(value)}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Most Improved Member */}
+                      <div>
+                        <div className="text-xs text-gray-400 mb-2">Most Improved</div>
+                        {(() => {
+                          // Calculate most improved based on rank change
+                          const mostImproved = [...team.members].sort((a, b) => {
+                            const aChange = a.rankChange?.direction === 'up' ? a.rankChange.change : 0;
+                            const bChange = b.rankChange?.direction === 'up' ? b.rankChange.change : 0;
+                            return bChange - aChange;
+                          })[0];
+
+                          return mostImproved && mostImproved.rankChange?.direction === 'up' ? (
+                            <div className="bg-primary-light/50 rounded-lg p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-2xl">🚀</span>
+                                <div>
+                                  <div className="text-sm font-semibold text-white">{mostImproved.name}</div>
+                                  <div className="text-xs text-green-400">
+                                    ↑ {mostImproved.rankChange.change} spot{mostImproved.rankChange.change > 1 ? 's' : ''}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {formatNumber(mostImproved.totalSteps)} steps
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-primary-light/50 rounded-lg p-3 text-center">
+                              <div className="text-sm text-gray-400">No rank changes yet</div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Team Members List */}
                   <div>
                     <div className="text-xs md:text-sm text-gray-400 mb-2 flex items-center gap-2">
@@ -176,6 +295,75 @@ export const Teams: React.FC = () => {
                             </div>
                           );
                         })}
+                    </div>
+                  </div>
+
+                  {/* Team Comments */}
+                  <div>
+                    <div className="text-xs md:text-sm text-gray-400 mb-2 flex items-center gap-2">
+                      <MessageSquare className="w-3 h-3 md:w-4 md:h-4" />
+                      Team Comments
+                    </div>
+
+                    {/* New Comment Form */}
+                    <div className="bg-primary-light/30 rounded-lg p-3 mb-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+                        <input
+                          type="text"
+                          placeholder="Your name..."
+                          value={newCommentName}
+                          onChange={(e) => setNewCommentName(e.target.value)}
+                          className="px-3 py-2 bg-primary-light border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-accent"
+                        />
+                        <button
+                          onClick={() => handleSubmitComment(team.name)}
+                          disabled={submittingComment}
+                          className="flex items-center justify-center gap-1 px-3 py-2 bg-accent hover:bg-accent/80 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold"
+                        >
+                          <Send className="w-3 h-3" />
+                          {submittingComment ? 'Posting...' : 'Post'}
+                        </button>
+                      </div>
+                      <textarea
+                        placeholder="Leave a comment for your team..."
+                        value={newCommentText}
+                        onChange={(e) => setNewCommentText(e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 bg-primary-light border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-accent resize-none"
+                      />
+                    </div>
+
+                    {/* Comments List */}
+                    <div className="space-y-2">
+                      {comments.get(team.name)?.length ? (
+                        comments.get(team.name)!.map((comment) => (
+                          <div
+                            key={comment.id}
+                            className="bg-primary-light/50 rounded-lg p-3"
+                          >
+                            <div className="flex items-start justify-between mb-1">
+                              <span className="text-xs md:text-sm font-semibold text-accent">
+                                {comment.authorName}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {new Date(comment.createdAt).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            </div>
+                            <p className="text-xs md:text-sm text-gray-300">{comment.comment}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="bg-primary-light/50 rounded-lg p-3 text-center">
+                          <p className="text-xs text-gray-400">
+                            No comments yet. Be the first to comment!
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

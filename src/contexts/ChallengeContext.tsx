@@ -7,6 +7,7 @@ import type {
   UpdatePreview,
   PacerEntry,
 } from '../types';
+import { supabase } from '../lib/supabase';
 import {
   loadParticipants,
   addParticipant as addParticipantDb,
@@ -27,6 +28,9 @@ import {
   calculateTotalSteps,
   calculateAverageSteps,
   calculateRaffleTickets,
+  calculateStreak,
+  calculateBadges,
+  calculateRankChange,
 } from '../utils/calculations';
 import { runAutomationChecks } from '../utils/automation';
 
@@ -135,18 +139,81 @@ export const ChallengeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     await loadData();
   }, [loadData]);
 
+  // Real-time subscriptions for live updates
+  useEffect(() => {
+    console.log('🔔 Setting up real-time subscriptions...');
+
+    // Subscribe to participants table changes
+    const participantsChannel = supabase
+      .channel('participants-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, () => {
+        console.log('🔄 Participants updated, reloading data...');
+        refreshData();
+      })
+      .subscribe();
+
+    // Subscribe to daily_history table changes
+    const dailyHistoryChannel = supabase
+      .channel('daily-history-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_history' }, () => {
+        console.log('🔄 Daily history updated, reloading data...');
+        refreshData();
+      })
+      .subscribe();
+
+    // Subscribe to challenge_config table changes
+    const configChannel = supabase
+      .channel('config-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'challenge_config' }, () => {
+        console.log('🔄 Config updated, reloading data...');
+        refreshData();
+      })
+      .subscribe();
+
+    // Subscribe to teams table changes
+    const teamsChannel = supabase
+      .channel('teams-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => {
+        console.log('🔄 Teams updated, reloading data...');
+        refreshData();
+      })
+      .subscribe();
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      console.log('🔕 Cleaning up real-time subscriptions...');
+      supabase.removeChannel(participantsChannel);
+      supabase.removeChannel(dailyHistoryChannel);
+      supabase.removeChannel(configChannel);
+      supabase.removeChannel(teamsChannel);
+    };
+  }, [refreshData]);
+
   // Computed values
   const rankedParticipants = useMemo(() => {
     if (!config) return [];
     const ranked = rankParticipants(participants, config);
-    // Add weekly70kCount and recalculate raffle tickets
+    // Add weekly70kCount, recalculate raffle tickets, calculate streak, badges, and rank change
     return ranked.map(p => {
       const weekly70kCount = weekly70kCounts.get(p.id) || 0;
       const raffleTickets = calculateRaffleTickets(p.totalSteps, weekly70kCount);
+      const streak = p.dailyHistory ? calculateStreak(p.dailyHistory) : 0;
+      const badges = calculateBadges({
+        totalSteps: p.totalSteps,
+        rank: p.rank,
+        points: p.points,
+        weekly70kCount,
+        streak,
+        milestones: p.milestones,
+      });
+      const rankChange = calculateRankChange(participants, p);
       return {
         ...p,
         weekly70kCount,
-        raffleTickets
+        raffleTickets,
+        streak,
+        badges,
+        rankChange
       };
     });
   }, [participants, config, weekly70kCounts]);

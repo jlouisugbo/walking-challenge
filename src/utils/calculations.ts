@@ -1,4 +1,4 @@
-import type { Participant, ParticipantWithRank, Team, MilestoneStatus, ChallengeConfig } from '../types';
+import type { Participant, ParticipantWithRank, Team, MilestoneStatus, ChallengeConfig, Badge, RankChange } from '../types';
 
 /**
  * Calculate milestone status based on total steps
@@ -23,6 +23,178 @@ export const calculateRaffleTickets = (steps: number, weekly70kCount: number = 0
   // Weekly 70k raffle tickets (1 ticket per 4 weeks of hitting 70k)
   tickets += Math.floor(weekly70kCount / 4);
   return tickets;
+};
+
+/**
+ * Calculate current streak of consecutive days with 10k+ steps
+ * @param dailyHistory Array of {date: string, steps: number} sorted by date descending
+ * @returns Number of consecutive days with 10k+ steps (starting from most recent day)
+ */
+export const calculateStreak = (dailyHistory: Array<{ date: string; steps: number }>): number => {
+  if (!dailyHistory || dailyHistory.length === 0) return 0;
+
+  // Sort by date descending (most recent first)
+  const sorted = [...dailyHistory].sort((a, b) => b.date.localeCompare(a.date));
+
+  let streak = 0;
+  const today = getCurrentEST();
+  let checkDate = new Date(today);
+  checkDate.setHours(0, 0, 0, 0);
+
+  // Count consecutive days with 10k+ steps, going backwards from today
+  for (const entry of sorted) {
+    const entryDate = new Date(entry.date + 'T00:00:00');
+    const expectedDate = new Date(checkDate);
+
+    // Check if this entry matches our expected date
+    if (entryDate.toDateString() === expectedDate.toDateString()) {
+      if (entry.steps >= 10000) {
+        streak++;
+        // Move to previous day
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        // Streak broken
+        break;
+      }
+    } else if (entryDate < expectedDate) {
+      // Missing day(s), streak broken
+      break;
+    }
+    // If entryDate > expectedDate, skip this entry (future date)
+  }
+
+  return streak;
+};
+
+/**
+ * Calculate badges/achievements for a participant
+ * @param participant Participant with rank data
+ * @returns Array of earned badges
+ */
+export const calculateBadges = (participant: {
+  totalSteps: number;
+  rank: number;
+  points: number;
+  weekly70kCount?: number;
+  streak?: number;
+  milestones: { reached150k: boolean; reached225k: boolean; reached300k: boolean };
+}): Badge[] => {
+  const badges: Badge[] = [];
+
+  // Goal Crusher - Reached 300k steps
+  if (participant.milestones.reached300k) {
+    badges.push({
+      id: 'goal-crusher',
+      name: 'Goal Crusher',
+      icon: '🏆',
+      color: 'text-yellow-400',
+      description: 'Reached the 300k step goal!',
+    });
+  }
+
+  // Top Performer - Rank 1-3
+  if (participant.rank <= 3) {
+    badges.push({
+      id: 'top-performer',
+      name: 'Top Performer',
+      icon: '⭐',
+      color: 'text-yellow-500',
+      description: 'Ranked in top 3!',
+    });
+  }
+
+  // Week Warrior - Multiple 70k weeks
+  if (participant.weekly70kCount && participant.weekly70kCount >= 3) {
+    badges.push({
+      id: 'week-warrior',
+      name: 'Week Warrior',
+      icon: '💪',
+      color: 'text-green-400',
+      description: `Achieved 70k steps in ${participant.weekly70kCount} weeks!`,
+    });
+  }
+
+  // Streak Master - Long streak
+  if (participant.streak && participant.streak >= 7) {
+    badges.push({
+      id: 'streak-master',
+      name: 'Streak Master',
+      icon: '🔥',
+      color: 'text-orange-400',
+      description: `${participant.streak} day streak of 10k+ steps!`,
+    });
+  }
+
+  // Wildcard Winner - Has wildcard points
+  if (participant.points > 0) {
+    badges.push({
+      id: 'wildcard-winner',
+      name: 'Wildcard Winner',
+      icon: '✨',
+      color: 'text-purple-400',
+      description: `Won ${participant.points} wildcard challenge${participant.points > 1 ? 's' : ''}!`,
+    });
+  }
+
+  // Milestone Achiever - Reached at least 150k
+  if (participant.milestones.reached150k && !participant.milestones.reached300k) {
+    badges.push({
+      id: 'milestone-achiever',
+      name: 'Milestone Achiever',
+      icon: '🎯',
+      color: 'text-blue-400',
+      description: 'Reached significant milestone!',
+    });
+  }
+
+  return badges;
+};
+
+/**
+ * Calculate rank change from yesterday to today
+ * @param participants All participants with their daily history
+ * @param currentParticipant The participant to calculate change for
+ * @returns Rank change information
+ */
+export const calculateRankChange = (
+  participants: Array<{ id: string; totalSteps: number; dailyHistory?: Array<{ date: string; steps: number }> }>,
+  currentParticipant: { id: string; totalSteps: number; dailyHistory?: Array<{ date: string; steps: number }> }
+): RankChange => {
+  // Get yesterday's date
+  const yesterday = new Date(getCurrentEST());
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  // Calculate yesterday's total steps for all participants
+  const yesterdaySteps = participants.map(p => {
+    // Sum all steps up to yesterday (not including today)
+    const historyUpToYesterday = p.dailyHistory?.filter(h => h.date <= yesterdayStr) || [];
+    const totalSteps = historyUpToYesterday.reduce((sum, h) => sum + h.steps, 0);
+    return { id: p.id, totalSteps };
+  });
+
+  // Rank participants by yesterday's steps
+  const yesterdayRanked = yesterdaySteps
+    .sort((a, b) => b.totalSteps - a.totalSteps)
+    .map((p, index) => ({ id: p.id, rank: index + 1 }));
+
+  // Find participant's rank yesterday
+  const yesterdayRank = yesterdayRanked.find(p => p.id === currentParticipant.id)?.rank || 0;
+
+  // Current rank is passed separately, we need to get it from the sorted list
+  const currentRanked = [...participants]
+    .sort((a, b) => b.totalSteps - a.totalSteps)
+    .map((p, index) => ({ id: p.id, rank: index + 1 }));
+
+  const currentRank = currentRanked.find(p => p.id === currentParticipant.id)?.rank || 0;
+
+  // Calculate change (negative because lower rank number is better)
+  const change = yesterdayRank - currentRank;
+
+  return {
+    change: Math.abs(change),
+    direction: change > 0 ? 'up' : change < 0 ? 'down' : 'same',
+  };
 };
 
 /**
@@ -99,7 +271,7 @@ export const rankParticipants = (
  * Calculate team statistics
  */
 export const calculateTeams = (participants: ParticipantWithRank[]): Team[] => {
-  const teamMap = new Map<string, Participant[]>();
+  const teamMap = new Map<string, ParticipantWithRank[]>();
 
   // Group participants by team
   participants.forEach((participant) => {
@@ -168,7 +340,7 @@ export const calculateDaysElapsed = (startDate: string): number => {
  * Check if currently in Heat Week (first 7 days: Nov 10-16, 2025)
  * Heat Week ends Nov 17, 2025 12:00 AM EST
  */
-export const isHeatWeek = (startDate: string): boolean => {
+export const isHeatWeek = (): boolean => {
   // Heat Week is specifically Nov 10-16, 2025
   // Teams start Nov 17, 2025 12:00 AM EST
   const nowEST = getCurrentEST();
