@@ -245,22 +245,50 @@ export const Leaderboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Participants List */}
-      <div className="space-y-2 md:space-y-2.5">
-        {filteredParticipants.length > 0 ? (
-          filteredParticipants.map((participant) => (
-            <ParticipantCard key={participant.id} participant={participant} />
-          ))
-        ) : (
-          <div className="glass-card p-6 md:p-8 text-center">
-            <div className="text-4xl md:text-5xl mb-2">🔍</div>
-            <p className="text-base md:text-lg text-gray-400">No participants found</p>
-            <p className="text-xs md:text-sm text-gray-500 mt-1">
-              Try adjusting your filters or search terms
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Participants List - Hierarchical Layout */}
+      {filteredParticipants.length > 0 ? (
+        <div className="space-y-2 md:space-y-3">
+          {/* Rank #1 - Large Grand Card */}
+          {filteredParticipants[0] && (
+            <div className="glass-card gradient-gold p-4 md:p-6 border-2 border-yellow-400/50">
+              <ParticipantCard participant={filteredParticipants[0]} className="!bg-transparent !p-0 !border-0" />
+            </div>
+          )}
+
+          {/* Rank #2 and #3 - 2 Cards Side by Side */}
+          {filteredParticipants.length > 1 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {filteredParticipants[1] && (
+                <div className={`glass-card p-3 md:p-4 ${filteredParticipants[1].rank === 2 ? 'gradient-silver' : ''}`}>
+                  <ParticipantCard participant={filteredParticipants[1]} className="!bg-transparent !p-0 !border-0" />
+                </div>
+              )}
+              {filteredParticipants[2] && (
+                <div className={`glass-card p-3 md:p-4 ${filteredParticipants[2].rank === 3 ? 'gradient-bronze' : ''}`}>
+                  <ParticipantCard participant={filteredParticipants[2]} className="!bg-transparent !p-0 !border-0" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Rank #4-25 - 3 Cards per Row on Desktop, 1 on Mobile */}
+          {filteredParticipants.length > 3 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5 md:gap-2">
+              {filteredParticipants.slice(3).map((participant) => (
+                <ParticipantCard key={participant.id} participant={participant} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="glass-card p-6 md:p-8 text-center">
+          <div className="text-4xl md:text-5xl mb-2">🔍</div>
+          <p className="text-base md:text-lg text-gray-400">No participants found</p>
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
+            Try adjusting your filters or search terms
+          </p>
+        </div>
+      )}
 
       {/* Personal Chart Modal */}
       {showChartModal && (

@@ -13,6 +13,22 @@ export const Teams: React.FC = () => {
   const [newCommentName, setNewCommentName] = useState('');
   const [newCommentText, setNewCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [commentCounts, setCommentCounts] = useState<Map<string, number>>(new Map());
+
+  // Load comment counts for all teams
+  React.useEffect(() => {
+    const loadAllCommentCounts = async () => {
+      const counts = new Map<string, number>();
+      for (const team of teams) {
+        const teamComments = await loadTeamComments(team.name);
+        counts.set(team.name, teamComments.length);
+      }
+      setCommentCounts(counts);
+    };
+    if (teams.length > 0) {
+      loadAllCommentCounts();
+    }
+  }, [teams]);
 
   const toggleTeam = (teamName: string) => {
     setExpandedTeam(expandedTeam === teamName ? null : teamName);
@@ -39,6 +55,7 @@ export const Teams: React.FC = () => {
     if (success) {
       const teamComments = await loadTeamComments(teamName);
       setComments(new Map(comments.set(teamName, teamComments)));
+      setCommentCounts(new Map(commentCounts.set(teamName, teamComments.length)));
       setNewCommentName('');
       setNewCommentText('');
     } else {
@@ -146,10 +163,15 @@ export const Teams: React.FC = () => {
                         e.stopPropagation();
                         openCommentsModal(team.name);
                       }}
-                      className="p-1.5 hover:bg-white/10 rounded transition-colors"
+                      className="flex items-center gap-1 p-1.5 hover:bg-white/10 rounded transition-colors"
                       title="Comments"
                     >
                       <MessageSquare className="w-4 h-4 text-accent" />
+                      {commentCounts.get(team.name) && commentCounts.get(team.name)! > 0 && (
+                        <span className="text-xs text-accent font-semibold">
+                          {commentCounts.get(team.name)}
+                        </span>
+                      )}
                     </button>
                     <div className="p-1.5">
                       {isExpanded ? (
@@ -252,8 +274,11 @@ export const Teams: React.FC = () => {
                               border: '1px solid rgba(0, 212, 255, 0.3)',
                               borderRadius: '8px',
                               fontSize: '12px',
+                              color: '#ffffff',
+                              zIndex: 1000,
                             }}
                             formatter={(value: number) => formatNumber(value)}
+                            wrapperStyle={{ zIndex: 1000 }}
                           />
                         </PieChart>
                       </ResponsiveContainer>
@@ -274,7 +299,10 @@ export const Teams: React.FC = () => {
                                 border: '1px solid rgba(0, 212, 255, 0.3)',
                                 borderRadius: '8px',
                                 fontSize: '10px',
+                                color: '#ffffff',
+                                zIndex: 1000,
                               }}
+                              wrapperStyle={{ zIndex: 1000 }}
                             />
                             <Legend wrapperStyle={{ fontSize: '10px' }} />
                             {team.members.map((m, index) => (
