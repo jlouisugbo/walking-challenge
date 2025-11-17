@@ -131,8 +131,9 @@ export const Teams: React.FC = () => {
           return (
             <div
               key={team.name}
-              className="glass-card overflow-hidden hover:border-accent/30 transition-colors"
+              className="glass-card overflow-hidden hover:border-accent/30 transition-colors cursor-pointer"
               style={{ borderLeft: `4px solid ${team.color || '#8b5cf6'}` }}
+              onClick={() => toggleTeam(team.name)}
             >
               {/* Compact Team Header */}
               <div className="p-2 md:p-3">
@@ -181,6 +182,20 @@ export const Teams: React.FC = () => {
                         </span>
                       )}
                     </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleTeam(team.name);
+                      }}
+                      className="p-1.5 hover:bg-white/10 rounded transition-colors"
+                      title={isExpanded ? "Collapse" : "Expand"}
+                    >
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-accent" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-accent" />
+                      )}
+                    </button>
                   </div>
                 </div>
 
@@ -207,6 +222,7 @@ export const Teams: React.FC = () => {
               </div>
 
               {/* Expanded Details */}
+              {isExpanded && (
               <div className="border-t border-white/10 p-2 md:p-3 bg-primary-light/20 space-y-2">
                   {/* Team Stats - Avg/Member and Most Improved side by side */}
                   <div className="grid grid-cols-2 gap-2">
@@ -329,7 +345,7 @@ export const Teams: React.FC = () => {
                     )}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           );
         })}
@@ -408,6 +424,7 @@ export const Teams: React.FC = () => {
           </div>
         </div>
       )}
+    </div>
     </>
   );
 };
