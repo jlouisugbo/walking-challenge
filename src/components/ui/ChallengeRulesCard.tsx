@@ -36,7 +36,7 @@ export const ChallengeRulesCard: React.FC<ChallengeRulesCardProps> = ({ onClose 
                 <strong className="text-white text-lg">Winning Team Gets:</strong> <span className="text-2xl text-purple-400 font-bold">$15 per team member!</span>
               </p>
               <p className="text-gray-300 text-sm">
-                <strong className="text-white">Team Size:</strong> 3 members each
+                <strong className="text-white">Team Size:</strong> 5 members each
               </p>
               <p className="text-gray-300 text-sm">
                 <strong className="text-white">How it Works:</strong> Teams compete based on combined total steps. The team with the highest total wins! Work together, motivate each other, and dominate! 💪

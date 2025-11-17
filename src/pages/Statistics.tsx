@@ -112,27 +112,27 @@ export const Statistics: React.FC = () => {
   const COLORS = ['#00d4ff', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-3 md:space-y-4 animate-slide-up">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-          <TrendingUp className="w-8 h-8 text-accent" />
-          Statistics & Analytics
+        <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-accent" />
+          Statistics
         </h1>
       </div>
 
       {/* Participant Selection */}
-      <div className="glass-card p-6">
-        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Users className="w-6 h-6 text-accent" />
-          Compare Participants ({selectedParticipants.length} selected)
+      <div className="glass-card p-2 md:p-3">
+        <h2 className="text-sm md:text-base font-bold text-white mb-1.5 flex items-center gap-1.5">
+          <Users className="w-4 h-4 text-accent" />
+          Compare Participants ({selectedParticipants.length}/5)
         </h2>
 
-        <p className="text-sm text-gray-400 mb-4">
-          Select up to 5 participants to compare their performance
+        <p className="text-[10px] md:text-xs text-gray-400 mb-1.5">
+          Select up to 5 participants to compare
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1">
           {rankedParticipants.map((participant) => {
             const isSelected = selectedParticipants.includes(participant.id);
             const canSelect = selectedParticipants.length < 5 || isSelected;
@@ -142,7 +142,7 @@ export const Statistics: React.FC = () => {
                 key={participant.id}
                 onClick={() => canSelect && toggleParticipant(participant.id)}
                 disabled={!canSelect}
-                className={`p-3 rounded-lg text-left transition-all ${
+                className={`p-1.5 rounded text-left transition-all ${
                   isSelected
                     ? 'bg-accent text-white font-semibold'
                     : canSelect
@@ -150,8 +150,8 @@ export const Statistics: React.FC = () => {
                     : 'bg-primary-light/30 text-gray-600 cursor-not-allowed'
                 }`}
               >
-                <div className="text-sm truncate">{participant.name}</div>
-                <div className="text-xs opacity-75 stat-number">{formatNumber(participant.totalSteps)}</div>
+                <div className="text-[10px] md:text-xs truncate">{participant.name}</div>
+                <div className="text-[10px] opacity-75 stat-number">{formatNumber(participant.totalSteps)}</div>
               </button>
             );
           })}
@@ -162,69 +162,55 @@ export const Statistics: React.FC = () => {
       {comparisonData.length > 0 && (
         <>
           {/* Stats Comparison */}
-          <div className="glass-card p-6">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <BarChart3 className="w-6 h-6 text-accent" />
+          <div className="glass-card p-2 md:p-3">
+            <h2 className="text-sm md:text-base font-bold text-white mb-1.5 flex items-center gap-1.5">
+              <BarChart3 className="w-4 h-4 text-accent" />
               Stats Comparison
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5">
               {comparisonData.map((participant, index) => (
                 <div
                   key={participant.id}
-                  className="bg-primary-light/50 rounded-lg p-4"
-                  style={{ borderLeft: `4px solid ${COLORS[index % COLORS.length]}` }}
+                  className="bg-primary-light/50 rounded p-1.5"
+                  style={{ borderLeft: `3px solid ${COLORS[index % COLORS.length]}` }}
                 >
-                  <div className="font-semibold text-white mb-3">{participant.name}</div>
+                  <div className="font-semibold text-white mb-1 text-xs md:text-sm truncate">{participant.name}</div>
 
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-0.5 text-[10px] md:text-xs">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Rank</span>
                       <span className="text-white font-semibold">#{participant.rank}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Total Steps</span>
+                      <span className="text-gray-400">Steps</span>
                       <span className="text-accent font-semibold stat-number">
                         {formatNumber(participant.totalSteps)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Miles Walked</span>
+                      <span className="text-gray-400">Miles</span>
                       <span className="text-blue-400 font-semibold">
-                        {stepsToMiles(participant.totalSteps).toFixed(1)} mi
+                        {stepsToMiles(participant.totalSteps).toFixed(1)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Progress</span>
                       <span className="text-green-400 font-semibold">
-                        {participant.progressPercent.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Raffle Tickets</span>
-                      <span className="text-yellow-400 font-semibold">
-                        {participant.raffleTickets}
+                        {participant.progressPercent.toFixed(0)}%
                       </span>
                     </div>
                     {participant.points > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Wildcard Points</span>
+                        <span className="text-gray-400">Wildcards</span>
                         <span className="text-purple-400 font-semibold">
                           {participant.points}
                         </span>
                       </div>
                     )}
-                    {participant.weekly70kCount && participant.weekly70kCount > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">70k Weeks</span>
-                        <span className="text-green-400 font-semibold">
-                          {participant.weekly70kCount}
-                        </span>
-                      </div>
-                    )}
                     {participant.dailyHistory && participant.dailyHistory.length > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Daily Avg</span>
+                        <span className="text-gray-400">Avg/Day</span>
                         <span className="text-white font-semibold stat-number">
                           {formatNumber(Math.round(participant.totalSteps / participant.dailyHistory.length))}
                         </span>
@@ -238,13 +224,13 @@ export const Statistics: React.FC = () => {
 
           {/* Chart Comparison */}
           {trendData.length > 0 ? (
-            <div className="glass-card p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <LineChartIcon className="w-6 h-6 text-accent" />
-                Step History Comparison
+            <div className="glass-card p-3 md:p-4">
+              <h2 className="text-base md:text-lg font-bold text-white mb-2 md:mb-3 flex items-center gap-2">
+                <LineChartIcon className="w-4 h-4 md:w-5 md:h-5 text-accent" />
+                Step History
               </h2>
 
-              <div className="h-80">
+              <div className="h-64 md:h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={trendData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
@@ -274,9 +260,9 @@ export const Statistics: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="glass-card p-12 text-center">
-              <div className="text-4xl mb-4">📊</div>
-              <p className="text-gray-400">
+            <div className="glass-card p-6 md:p-8 text-center">
+              <div className="text-3xl md:text-4xl mb-2">📊</div>
+              <p className="text-sm md:text-base text-gray-400">
                 No historical data available yet. Import daily data in the Admin panel to see trend charts.
               </p>
             </div>
@@ -285,30 +271,30 @@ export const Statistics: React.FC = () => {
       )}
 
       {comparisonData.length === 0 && (
-        <div className="glass-card p-12 text-center">
-          <div className="text-6xl mb-4">👆</div>
-          <p className="text-xl text-gray-400">Select participants above to compare stats</p>
+        <div className="glass-card p-6 md:p-8 text-center">
+          <div className="text-4xl md:text-5xl mb-2">👆</div>
+          <p className="text-base md:text-lg text-gray-400">Select participants above to compare stats</p>
         </div>
       )}
 
       {/* Advanced Statistics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-3">
         {/* Most Consistent */}
         {mostConsistent.length > 0 && (
-          <div className="glass-card p-6">
-            <h2 className="text-xl font-bold text-white mb-4">👑 Most Consistent Performers</h2>
-            <p className="text-xs text-gray-400 mb-3">Lowest variance in daily steps</p>
-            <div className="space-y-2">
+          <div className="glass-card p-3 md:p-4">
+            <h2 className="text-base md:text-lg font-bold text-white mb-2">👑 Most Consistent Performers</h2>
+            <p className="text-xs text-gray-400 mb-2">Lowest variance in daily steps</p>
+            <div className="space-y-1">
               {mostConsistent.map((p, index) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                  className="flex items-center justify-between bg-primary-light/50 rounded p-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-400 font-bold">#{index + 1}</span>
-                    <span className="text-white">{p.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 font-bold text-xs">#{index + 1}</span>
+                    <span className="text-white text-sm">{p.name}</span>
                   </div>
-                  <span className="text-purple-400 font-semibold">±{formatNumber(Math.round(p.stdDev))}</span>
+                  <span className="text-purple-400 font-semibold text-sm">±{formatNumber(Math.round(p.stdDev))}</span>
                 </div>
               ))}
             </div>
@@ -317,20 +303,20 @@ export const Statistics: React.FC = () => {
 
         {/* Wildcard Leaders */}
         {wildcardLeaders.length > 0 && (
-          <div className="glass-card p-6">
-            <h2 className="text-xl font-bold text-white mb-4">✨ Wildcard Points Leaders</h2>
-            <p className="text-xs text-gray-400 mb-3">Most daily challenge wins</p>
-            <div className="space-y-2">
+          <div className="glass-card p-3 md:p-4">
+            <h2 className="text-base md:text-lg font-bold text-white mb-2">✨ Wildcard Points Leaders</h2>
+            <p className="text-xs text-gray-400 mb-2">Most daily challenge wins</p>
+            <div className="space-y-1">
               {wildcardLeaders.map((p, index) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                  className="flex items-center justify-between bg-primary-light/50 rounded p-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-400 font-bold">#{index + 1}</span>
-                    <span className="text-white">{p.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 font-bold text-xs">#{index + 1}</span>
+                    <span className="text-white text-sm">{p.name}</span>
                   </div>
-                  <span className="text-yellow-400 font-semibold">{p.points} pts</span>
+                  <span className="text-yellow-400 font-semibold text-sm">{p.points} pts</span>
                 </div>
               ))}
             </div>
@@ -338,20 +324,20 @@ export const Statistics: React.FC = () => {
         )}
 
         {/* Total Distance */}
-        <div className="glass-card p-6">
-          <h2 className="text-xl font-bold text-white mb-4">🗺️ Distance Walked (Miles)</h2>
-          <p className="text-xs text-gray-400 mb-3">Estimated total distance covered</p>
-          <div className="space-y-2">
+        <div className="glass-card p-3 md:p-4">
+          <h2 className="text-base md:text-lg font-bold text-white mb-2">🗺️ Distance Walked (Miles)</h2>
+          <p className="text-xs text-gray-400 mb-2">Estimated total distance covered</p>
+          <div className="space-y-1">
             {topByDistance.map((p, index) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                className="flex items-center justify-between bg-primary-light/50 rounded p-2"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-400 font-bold">#{index + 1}</span>
-                  <span className="text-white">{p.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400 font-bold text-xs">#{index + 1}</span>
+                  <span className="text-white text-sm">{p.name}</span>
                 </div>
-                <span className="text-blue-400 font-semibold">{p.miles} mi</span>
+                <span className="text-blue-400 font-semibold text-sm">{p.miles} mi</span>
               </div>
             ))}
           </div>
@@ -359,20 +345,20 @@ export const Statistics: React.FC = () => {
 
         {/* Weekend Warriors */}
         {weekendWarriors.length > 0 && (
-          <div className="glass-card p-6">
-            <h2 className="text-xl font-bold text-white mb-4">🎉 Weekend Warriors</h2>
-            <p className="text-xs text-gray-400 mb-3">Most steps on weekends</p>
-            <div className="space-y-2">
+          <div className="glass-card p-3 md:p-4">
+            <h2 className="text-base md:text-lg font-bold text-white mb-2">🎉 Weekend Warriors</h2>
+            <p className="text-xs text-gray-400 mb-2">Most steps on weekends</p>
+            <div className="space-y-1">
               {weekendWarriors.map((p, index) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                  className="flex items-center justify-between bg-primary-light/50 rounded p-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-400 font-bold">#{index + 1}</span>
-                    <span className="text-white">{p.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 font-bold text-xs">#{index + 1}</span>
+                    <span className="text-white text-sm">{p.name}</span>
                   </div>
-                  <span className="text-pink-400 font-semibold stat-number">{formatNumber(p.weekendSteps)}</span>
+                  <span className="text-pink-400 font-semibold text-sm stat-number">{formatNumber(p.weekendSteps)}</span>
                 </div>
               ))}
             </div>
@@ -381,20 +367,20 @@ export const Statistics: React.FC = () => {
 
         {/* Best Streaks */}
         {bestStreaks.length > 0 && (
-          <div className="glass-card p-6">
-            <h2 className="text-xl font-bold text-white mb-4">🔥 Best Streaks</h2>
-            <p className="text-xs text-gray-400 mb-3">Consecutive days with 10k+ steps</p>
-            <div className="space-y-2">
+          <div className="glass-card p-3 md:p-4">
+            <h2 className="text-base md:text-lg font-bold text-white mb-2">🔥 Best Streaks</h2>
+            <p className="text-xs text-gray-400 mb-2">Consecutive days with 10k+ steps</p>
+            <div className="space-y-1">
               {bestStreaks.map((p, index) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                  className="flex items-center justify-between bg-primary-light/50 rounded p-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-400 font-bold">#{index + 1}</span>
-                    <span className="text-white">{p.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 font-bold text-xs">#{index + 1}</span>
+                    <span className="text-white text-sm">{p.name}</span>
                   </div>
-                  <span className="text-orange-400 font-semibold">{p.streak} days</span>
+                  <span className="text-orange-400 font-semibold text-sm">{p.streak} days</span>
                 </div>
               ))}
             </div>
@@ -402,10 +388,10 @@ export const Statistics: React.FC = () => {
         )}
 
         {/* Average Daily Steps */}
-        <div className="glass-card p-6">
-          <h2 className="text-xl font-bold text-white mb-4">📊 Highest Daily Average</h2>
-          <p className="text-xs text-gray-400 mb-3">Average steps per day</p>
-          <div className="space-y-2">
+        <div className="glass-card p-3 md:p-4">
+          <h2 className="text-base md:text-lg font-bold text-white mb-2">📊 Highest Daily Average</h2>
+          <p className="text-xs text-gray-400 mb-2">Average steps per day</p>
+          <div className="space-y-1">
             {rankedParticipants
               .filter((p) => p.dailyAverage && p.dailyAverage > 0)
               .sort((a, b) => (b.dailyAverage || 0) - (a.dailyAverage || 0))
@@ -413,13 +399,13 @@ export const Statistics: React.FC = () => {
               .map((p, index) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between bg-primary-light/50 rounded-lg p-3"
+                  className="flex items-center justify-between bg-primary-light/50 rounded p-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-gray-400 font-bold">#{index + 1}</span>
-                    <span className="text-white">{p.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 font-bold text-xs">#{index + 1}</span>
+                    <span className="text-white text-sm">{p.name}</span>
                   </div>
-                  <span className="text-green-400 font-semibold stat-number">
+                  <span className="text-green-400 font-semibold text-sm stat-number">
                     {formatNumber(Math.round(p.dailyAverage || 0))}
                   </span>
                 </div>

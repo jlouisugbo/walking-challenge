@@ -1,12 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, Trophy, ArrowUpDown, X, TrendingUp } from 'lucide-react';
+import { Search, SlidersHorizontal, ArrowUpDown, X, Trophy, TrendingUp, Sparkles } from 'lucide-react';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { ParticipantCard } from '../components/ui/ParticipantCard';
 import { PersonalChartModal } from '../components/ui/PersonalChartModal';
+import { ProgressBar } from '../components/ui/ProgressBar';
+import { MilestoneIndicator } from '../components/ui/MilestoneIndicator';
+import { formatNumber, stepsToMiles } from '../utils/calculations';
 import type { SortField, SortDirection } from '../types';
 
 export const Leaderboard: React.FC = () => {
-  const { rankedParticipants } = useChallenge();
+  const { rankedParticipants, getTeamDisplayName, getTeamCustomization } = useChallenge();
   const [searchTerm, setSearchTerm] = useState('');
   const [teamFilter, setTeamFilter] = useState<string>('all');
   const [milestoneFilter, setMilestoneFilter] = useState<string>('all');
@@ -245,22 +248,194 @@ export const Leaderboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Participants List */}
-      <div className="space-y-2 md:space-y-2.5">
-        {filteredParticipants.length > 0 ? (
-          filteredParticipants.map((participant) => (
-            <ParticipantCard key={participant.id} participant={participant} />
-          ))
-        ) : (
-          <div className="glass-card p-6 md:p-8 text-center">
-            <div className="text-4xl md:text-5xl mb-2">🔍</div>
-            <p className="text-base md:text-lg text-gray-400">No participants found</p>
-            <p className="text-xs md:text-sm text-gray-500 mt-1">
-              Try adjusting your filters or search terms
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Participants List - Hierarchical Layout (restored) */}
+      {filteredParticipants.length > 0 ? (
+        <div className="space-y-3 md:space-y-4">
+          {/* Rank #1 - Featured Card (reduced padding) */}
+          {filteredParticipants[0] && (
+            <div className="glass-card p-3 md:p-4 border-2 border-yellow-400/50 bg-gradient-to-br from-yellow-500/10 to-amber-600/10 hover:border-yellow-400/70 transition-all">
+              <div className="grid grid-cols-12 items-center gap-2 md:gap-3">
+                {/* Col 1: Rank + Name + Team */}
+                <div className="col-span-7 flex items-center gap-2 min-w-0">
+                  <span className="text-2xl md:text-3xl animate-bounce select-none">👑</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="text-lg md:text-xl font-bold text-yellow-400 whitespace-nowrap">🥇 #1</div>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <h3 className="text-sm md:text-base font-bold text-white truncate flex-1 min-w-0">{filteredParticipants[0].name}</h3>
+                      {filteredParticipants[0].team && (() => {
+                        const cust = getTeamCustomization(filteredParticipants[0].team);
+                        const color = cust?.color || '#fbbf24';
+                        return (
+                          <span
+                            className="shrink-0 text-[10px] md:text-xs px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap"
+                            style={{
+                              backgroundColor: `${color}40`,
+                              color: color,
+                              border: `1px solid ${color}60`
+                            }}
+                          >
+                            {getTeamDisplayName(filteredParticipants[0].team)}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Col 2: Steps */}
+                <div className="col-span-2 -ml-2 md:-ml-2 text-center md:text-left">
+                  <div className="text-lg md:text-xl font-bold text-yellow-400 stat-number">
+                    {formatNumber(filteredParticipants[0].totalSteps)}
+                  </div>
+                  <div className="text-[10px] md:text-xs text-gray-400">
+                    {stepsToMiles(filteredParticipants[0].totalSteps).toFixed(1)} mi
+                  </div>
+                </div>
+
+                {/* Col 3: Progress + Achievements */}
+                <div className="col-span-3 md:pl-2">
+                  <ProgressBar percent={filteredParticipants[0].progressPercent} className="mb-1" />
+                  <div className="flex items-center gap-2 text-[10px] md:text-xs overflow-hidden">
+                    <MilestoneIndicator milestones={filteredParticipants[0].milestones} size="sm" />
+                  </div>
+                  <div className="flex items-center justify-end gap-1 text-[10px] md:text-xs text-purple-400">
+                    <Sparkles className="w-3 h-3" />
+                    <span className="font-medium text-purple-300">WC:</span>
+                    <span className="font-semibold">{filteredParticipants[0].points}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Rank #2 and #3 - Side by Side (reduced padding) */}
+          {filteredParticipants.length > 1 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              {filteredParticipants[1] && (
+                <div className="glass-card p-2.5 md:p-3 border-2 border-gray-400/50 bg-gradient-to-br from-gray-400/10 to-gray-500/10 hover:border-gray-400/70 transition-all">
+                  <div className="grid grid-cols-12 items-center gap-2 md:gap-3">
+                    {/* Col 1: Rank + Name + Team */}
+                    <div className="col-span-7 flex items-center gap-2 min-w-0">
+                      <div className="text-lg md:text-xl font-bold text-gray-300 whitespace-nowrap">🥈 #2</div>
+                      <div className="flex items-center gap-1 min-w-0">
+                        <h3 className="text-sm md:text-base font-bold text-white truncate flex-1 min-w-0">{filteredParticipants[1].name}</h3>
+                        {filteredParticipants[1].team && (() => {
+                          const cust = getTeamCustomization(filteredParticipants[1].team);
+                          const color = cust?.color || '#d1d5db';
+                          return (
+                            <span
+                              className="shrink-0 text-[10px] md:text-xs px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap"
+                              style={{
+                                backgroundColor: `${color}40`,
+                                color: color,
+                                border: `1px solid ${color}60`
+                              }}
+                            >
+                              {getTeamDisplayName(filteredParticipants[1].team)}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Col 2: Steps */}
+                    <div className="col-span-2 -ml-2 md:-ml-2 text-center md:text-left">
+                      <div className="text-lg md:text-xl font-bold text-gray-300 stat-number">
+                        {formatNumber(filteredParticipants[1].totalSteps)}
+                      </div>
+                      <div className="text-[10px] md:text-xs text-gray-500">
+                        {stepsToMiles(filteredParticipants[1].totalSteps).toFixed(1)} mi
+                      </div>
+                    </div>
+
+                    {/* Col 3: Progress + Achievements */}
+                    <div className="col-span-3 md:pl-2">
+                      <ProgressBar percent={filteredParticipants[1].progressPercent} className="mb-1" />
+                      <div className="flex items-center gap-2 text-[10px] md:text-xs overflow-hidden">
+                        <MilestoneIndicator milestones={filteredParticipants[1].milestones} size="sm" />
+                      </div>
+                      <div className="flex items-center justify-end gap-1 text-[10px] md:text-xs text-purple-400">
+                        <Sparkles className="w-3 h-3" />
+                        <span className="font-medium text-purple-300">WC:</span>
+                        <span className="font-semibold">{filteredParticipants[1].points}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {filteredParticipants[2] && (
+                <div className="glass-card p-2.5 md:p-3 border-2 border-orange-400/50 bg-gradient-to-br from-orange-500/10 to-amber-600/10 hover:border-orange-400/70 transition-all">
+                  <div className="grid grid-cols-12 items-center gap-2 md:gap-3">
+                    {/* Col 1: Rank + Name + Team */}
+                    <div className="col-span-7 flex items-center gap-2 min-w-0">
+                      <div className="text-lg md:text-xl font-bold text-orange-400 whitespace-nowrap">🥉 #3</div>
+                      <div className="flex items-center gap-1 min-w-0">
+                        <h3 className="text-sm md:text-base font-bold text-white truncate flex-1 min-w-0">{filteredParticipants[2].name}</h3>
+                        {filteredParticipants[2].team && (() => {
+                          const cust = getTeamCustomization(filteredParticipants[2].team);
+                          const color = cust?.color || '#fb923c';
+                          return (
+                            <span
+                              className="shrink-0 text-[10px] md:text-xs px-1.5 py-0.5 rounded-full font-semibold whitespace-nowrap"
+                              style={{
+                                backgroundColor: `${color}40`,
+                                color: color,
+                                border: `1px solid ${color}60`
+                              }}
+                            >
+                              {getTeamDisplayName(filteredParticipants[2].team)}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Col 2: Steps */}
+                    <div className="col-span-2 -ml-2 md:-ml-2 text-center md:text-left">
+                      <div className="text-lg md:text-xl font-bold text-orange-400 stat-number">
+                        {formatNumber(filteredParticipants[2].totalSteps)}
+                      </div>
+                      <div className="text-[10px] md:text-xs text-gray-500">
+                        {stepsToMiles(filteredParticipants[2].totalSteps).toFixed(1)} mi
+                      </div>
+                    </div>
+
+                    {/* Col 3: Progress + Achievements */}
+                    <div className="col-span-3 md:pl-2">
+                      <ProgressBar percent={filteredParticipants[2].progressPercent} className="mb-1" />
+                      <div className="flex items-center gap-2 text-[10px] md:text-xs overflow-hidden">
+                        <MilestoneIndicator milestones={filteredParticipants[2].milestones} size="sm" />
+                      </div>
+                      <div className="flex items-center justify-end gap-1 text-[10px] md:text-xs text-purple-400">
+                        <Sparkles className="w-3 h-3" />
+                        <span className="font-medium text-purple-300">WC:</span>
+                        <span className="font-semibold">{filteredParticipants[2].points}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Rank #4+ */}
+          {filteredParticipants.length > 3 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5 md:gap-2">
+              {filteredParticipants.slice(3).map((participant) => (
+                <ParticipantCard key={participant.id} participant={participant} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="glass-card p-6 md:p-8 text-center">
+          <div className="text-4xl md:text-5xl mb-2">🔍</div>
+          <p className="text-base md:text-lg text-gray-400">No participants found</p>
+          <p className="text-xs md:text-sm text-gray-500 mt-1">
+            Try adjusting your filters or search terms
+          </p>
+        </div>
+      )}
 
       {/* Personal Chart Modal */}
       {showChartModal && (

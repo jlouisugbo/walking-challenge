@@ -4,6 +4,7 @@ import type { ParticipantWithRank } from '../../types';
 import { formatNumber, getRankMedal, getRankColor, stepsToMiles } from '../../utils/calculations';
 import { ProgressBar } from './ProgressBar';
 import { MilestoneIndicator } from './MilestoneIndicator';
+import { useChallenge } from '../../contexts/ChallengeContext';
 
 interface ParticipantCardProps {
   participant: ParticipantWithRank;
@@ -20,28 +21,33 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
   compact = false,
   className = '',
 }) => {
+  const { getTeamDisplayName, getTeamCustomization } = useChallenge();
   const medal = getRankMedal(participant.rank);
   const rankColorClass = getRankColor(participant.rank);
   const isTopThree = participant.rank <= 3;
+  const teamDisplayName = getTeamDisplayName(participant.team);
+  const teamCustomization = getTeamCustomization(participant.team);
+  const teamColor = teamCustomization?.color || '#8b5cf6';
 
   return (
     <div
-      className={`glass-card px-3 md:px-4 py-2 md:py-2.5 hover:scale-[1.01] transition-all duration-200 cursor-pointer ${
+      className={`glass-card px-1.5 md:px-2 py-1 md:py-1.5 hover:scale-[1.01] transition-all duration-200 cursor-pointer ${
         isTopThree ? rankColorClass : ''
       } ${className}`}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between mb-1.5 md:mb-2">
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="flex items-center gap-1 md:gap-2">
-            {medal && <span className="text-xl md:text-2xl">{medal}</span>}
-            <div className="flex items-center gap-1">
-              <div className={`text-lg md:text-xl font-bold ${isTopThree ? 'text-white' : 'text-gray-400'}`}>
+      <div className="flex items-center justify-between mb-0.5">
+        <div className="flex items-center gap-1 md:gap-1.5 flex-1 min-w-0">
+          {/* Medal & Rank */}
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            {medal && <span className="text-base md:text-lg">{medal}</span>}
+            <div className="flex items-center gap-0.5">
+              <div className={`text-xs md:text-sm font-bold ${isTopThree ? 'text-white' : 'text-gray-400'}`}>
                 #{participant.rank}
               </div>
               {participant.rankChange && participant.rankChange.direction !== 'same' && participant.rankChange.change > 0 && (
                 <div
-                  className={`flex items-center text-xs font-semibold ${
+                  className={`flex items-center text-[10px] md:text-xs font-semibold ${
                     participant.rankChange.direction === 'up' ? 'text-green-400' : 'text-red-400'
                   }`}
                   title={`${participant.rankChange.direction === 'up' ? 'Moved up' : 'Moved down'} ${participant.rankChange.change} spot${participant.rankChange.change > 1 ? 's' : ''} since yesterday`}
@@ -52,20 +58,31 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
               )}
             </div>
           </div>
-          <div>
-            <h3 className="text-base md:text-lg font-bold text-white">{participant.name}</h3>
+
+          {/* Name & Team (inline) */}
+          <div className="flex items-center gap-1 flex-1 min-w-0">
+            <h3 className="text-xs md:text-sm font-bold text-white truncate">{participant.name}</h3>
             {showTeam && participant.team && (
-              <span className="text-xs bg-accent/20 text-accent px-1.5 md:px-2 py-0.5 md:py-1 rounded-full">
-                {participant.team}
+              <span 
+                className="text-[10px] md:text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0 font-semibold"
+                style={{ 
+                  backgroundColor: `${teamColor}40`, 
+                  color: teamColor,
+                  border: `1px solid ${teamColor}60`
+                }}
+              >
+                {teamDisplayName}
               </span>
             )}
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-lg md:text-xl font-bold text-accent stat-number">
+
+        {/* Steps */}
+        <div className="text-right flex-shrink-0 ml-1">
+          <div className={`text-sm md:text-base font-bold stat-number ${isTopThree ? 'text-white' : 'text-white'}`}>
             {formatNumber(participant.totalSteps)}
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-[10px] md:text-xs text-gray-400">
             {stepsToMiles(participant.totalSteps).toFixed(1)} mi
           </div>
         </div>
@@ -73,59 +90,59 @@ export const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
       {!compact && (
         <>
-          <ProgressBar percent={participant.progressPercent} className="mb-1.5" />
-
-          {/* Badges */}
-          {participant.badges && participant.badges.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-1.5">
-              {participant.badges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-white/5 ${badge.color} text-xs`}
-                  title={badge.description}
-                >
-                  <span className="text-xs">{badge.icon}</span>
-                  <span className="font-semibold hidden sm:inline">{badge.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <ProgressBar percent={participant.progressPercent} className="mb-0.5" />
 
           <div className="flex items-center justify-between">
-            <MilestoneIndicator milestones={participant.milestones} size="sm" />
+            {/* Left side: Milestones & Badges */}
+            <div className="flex items-center gap-1 flex-1 min-w-0">
+              <MilestoneIndicator milestones={participant.milestones} size="sm" />
+              {participant.badges && participant.badges.length > 0 && (
+                <div className="flex gap-0.5">
+                  {participant.badges.slice(0, 3).map((badge) => (
+                    <span
+                      key={badge.id}
+                      className="text-[10px] md:text-xs"
+                      title={badge.description}
+                    >
+                      {badge.icon}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
+            {/* Right side: Stats */}
+            <div className="flex items-center gap-1.5 text-[10px] md:text-xs flex-shrink-0">
               {participant.streak && participant.streak > 0 && (
-                <div className="flex items-center gap-0.5 md:gap-1 text-orange-400">
-                  <span className="text-xs md:text-sm">🔥</span>
+                <div className="flex items-center gap-0.5 text-orange-400">
+                  <span className="text-[10px] md:text-xs">🔥</span>
                   <span className="font-semibold">{participant.streak}</span>
                 </div>
               )}
 
-              {participant.points > 0 && (
-                <div className="flex items-center gap-0.5 md:gap-1 text-purple-400">
-                  <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="font-semibold">{participant.points}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-0.5 text-purple-400">
+                <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                <span className="font-medium text-purple-300">WC:</span>
+                <span className="font-semibold">{participant.points}</span>
+              </div>
 
               {participant.weekly70kCount && participant.weekly70kCount > 0 && (
-                <div className="flex items-center gap-0.5 md:gap-1 text-green-400">
-                  <Trophy className="w-3 h-3 md:w-4 md:h-4" />
+                <div className="flex items-center gap-0.5 text-green-400">
+                  <Trophy className="w-2.5 h-2.5 md:w-3 md:h-3" />
                   <span className="font-semibold">{participant.weekly70kCount}x</span>
                 </div>
               )}
 
               {participant.raffleTickets > 0 && (
-                <div className="flex items-center gap-0.5 md:gap-1 text-yellow-400">
-                  <span className="text-xs md:text-sm">🎟️</span>
+                <div className="flex items-center gap-0.5 text-yellow-400">
+                  <span className="text-[10px] md:text-xs">🎟️</span>
                   <span className="font-semibold">{participant.raffleTickets}</span>
                 </div>
               )}
 
               {participant.prize && (
-                <div className="flex items-center gap-0.5 md:gap-1 text-green-400">
-                  <Trophy className="w-3 h-3 md:w-4 md:h-4" />
+                <div className="flex items-center gap-0.5 text-green-400">
+                  <Trophy className="w-2.5 h-2.5 md:w-3 md:h-3" />
                   <span className="font-semibold">${participant.prize}</span>
                 </div>
               )}
