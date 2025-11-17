@@ -160,7 +160,7 @@ export const Dashboard: React.FC = () => {
                     : 'bg-gradient-to-br from-purple-500/20 to-blue-500/20 border-2 border-purple-400/50'
                 }`}
               >
-                {index === 0 && (
+                {index === 0 && !team.imageUrl && (
                   <div className="absolute top-4 right-4 text-6xl opacity-20">👑</div>
                 )}
 
@@ -172,6 +172,16 @@ export const Dashboard: React.FC = () => {
                       </div>
                       {team.rank === 1 && <span className="text-5xl animate-bounce">🏆</span>}
                       {team.rank === 2 && <span className="text-4xl">🥈</span>}
+                    </div>
+                    <div className="flex items-center">
+                      {team.imageUrl && (
+                        <img
+                          src={team.imageUrl}
+                          alt={team.name}
+                          className="w-28 h-28 md:w-36 md:h-36 rounded-lg object-cover border border-white/20"
+                          loading="lazy"
+                        />
+                      )}
                     </div>
                   </div>
 

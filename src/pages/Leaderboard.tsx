@@ -257,7 +257,23 @@ export const Leaderboard: React.FC = () => {
               <div className="grid grid-cols-12 items-center gap-2 md:gap-3">
                 {/* Col 1: Rank + Name + Team */}
                 <div className="col-span-7 flex items-center gap-2 min-w-0">
-                  <span className="text-2xl md:text-3xl animate-bounce select-none">👑</span>
+                  {(() => {
+                    const team = filteredParticipants[0].team;
+                    const cust = team ? getTeamCustomization(team) : undefined;
+                    if (cust?.imageUrl) {
+                      return (
+                        <img
+                          src={cust.imageUrl}
+                          alt={getTeamDisplayName(team)}
+                          className="w-7 h-7 md:w-9 md:h-9 rounded-lg object-cover border border-white/20"
+                          loading="lazy"
+                        />
+                      );
+                    }
+                    return (
+                      <span className="text-2xl md:text-3xl select-none">👑</span>
+                    );
+                  })()}
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="text-lg md:text-xl font-bold text-yellow-400 whitespace-nowrap">🥇 #1</div>
                     <div className="flex items-center gap-1 min-w-0">
@@ -316,6 +332,21 @@ export const Leaderboard: React.FC = () => {
                   <div className="grid grid-cols-12 items-center gap-2 md:gap-3">
                     {/* Col 1: Rank + Name + Team */}
                     <div className="col-span-7 flex items-center gap-2 min-w-0">
+                      {(() => {
+                        const team = filteredParticipants[1].team;
+                        const cust = team ? getTeamCustomization(team) : undefined;
+                        if (cust?.imageUrl) {
+                          return (
+                            <img
+                              src={cust.imageUrl}
+                              alt={getTeamDisplayName(team)}
+                              className="w-6 h-6 md:w-8 md:h-8 rounded-lg object-cover border border-white/20"
+                              loading="lazy"
+                            />
+                          );
+                        }
+                        return null;
+                      })()}
                       <div className="text-lg md:text-xl font-bold text-gray-300 whitespace-nowrap">🥈 #2</div>
                       <div className="flex items-center gap-1 min-w-0">
                         <h3 className="text-sm md:text-base font-bold text-white truncate flex-1 min-w-0">{filteredParticipants[1].name}</h3>
